@@ -269,9 +269,9 @@ export default function Show({
         });
     }
 
-    return (
+  return (
         <AppLayout>
-            <Head title={`${panti.nama} - DISKATmsa`} />
+            <Head title={`${panti.nama} - SADAP`} />
 
             <PageHeader
                 title={panti.nama}
@@ -302,6 +302,8 @@ export default function Show({
                     </>
                 }
             />
+            
+            {/* ... (lanjutan kode grid items dan tabs di bawahnya tetap sama) ... */}
 
             <div className="grid items-start gap-7 xl:grid-cols-[1.55fr_1fr]">
                 <div className="space-y-7">

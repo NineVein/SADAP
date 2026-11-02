@@ -4,8 +4,8 @@ import AppLayout from '../../Layouts/AppLayout';
 import Icon from '../../Components/Icon';
 import useFilters from '../../Hooks/useFilters';
 import {
-    Card, EmptyRow, FilterBar, Pagination, PageHeader, ProgressBar, StatusBadge, ConfirmModal,
-    actDelete, actEdit, actView, btnPrimary, inputClass, tdClass, thClass,
+    FilterBar, Pagination, PageHeader, ProgressBar, StatusBadge, ConfirmModal,
+    actDelete, actEdit, actView, btnPrimary, inputClass
 } from '../../Components/ui';
 
 const TABS = [
@@ -36,20 +36,21 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
 
     return (
         <AppLayout>
-            <Head title="Daftar Panti Asuhan - DISKATmsa" />
+            <Head title="Daftar Panti Asuhan - SADAP" />
 
             <PageHeader
                 title="Daftar Lembaga Panti Asuhan"
                 description="Pusat kerja administrasi: pilih panti untuk mengelola anak asuh, data kepengurusan, dokumen legalitas, dan status validasi bantuan."
                 actions={can.create && (
                     <Link href="/panti/create" className={btnPrimary}>
-                        <Icon name="plus" size={17} /> Tambah Panti Baru
+                        <Icon name="plus" size={18} /> 
+                        <span>Tambah Panti Baru</span>
                     </Link>
                 )}
             />
 
             {/* Tab Penyaringan Status Validasi */}
-            <div role="tablist" className="mb-6 flex flex-wrap gap-2.5">
+            <div role="tablist" className="mb-6 flex flex-wrap items-center gap-3">
                 {TABS.map((t) => (
                     <button
                         key={t.key}
@@ -57,15 +58,17 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                         aria-selected={f.validasi === t.key}
                         type="button"
                         onClick={() => setF('validasi', t.key)}
-                        className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition shadow-2xs ${
+                        className={`group flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                             f.validasi === t.key
-                                ? 'border-[#203b2e] bg-[#203b2e] text-[#f7f2e5] shadow-xs'
-                                : 'border-[#d6d9cb] bg-white text-[#38433a] hover:bg-[#f1f3e9]'
+                                ? 'border-[#172b25] bg-[#172b25] text-white shadow-md'
+                                : 'border-[#e2e4d8] bg-white text-[#5a6253] hover:border-[#c4c8b9] hover:bg-[#f7f8f3]'
                         }`}
                     >
                         <span>{t.label}</span>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-extrabold ${
-                            f.validasi === t.key ? 'bg-white/20 text-white' : 'bg-[#e9ecdf] text-[#4f5747]'
+                        <span className={`flex h-6 min-w-[24px] items-center justify-center rounded-full px-2 text-[11px] font-bold transition-colors ${
+                            f.validasi === t.key 
+                                ? 'bg-white/20 text-white' 
+                                : 'bg-[#f7f8f3] text-[#8a9182] group-hover:bg-[#e2e4d8] group-hover:text-[#172b25]'
                         }`}>
                             {counts[t.count]}
                         </span>
@@ -73,6 +76,7 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                 ))}
             </div>
 
+            {/* Filter Bar */}
             <FilterBar
                 hasActiveFilters={hasActiveFilters}
                 onReset={() => {
@@ -82,32 +86,37 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                 }}
             >
                 <div className="sm:col-span-2">
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#525a4a]" htmlFor="cari">
+                    <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]" htmlFor="cari">
                         Pencarian Kata Kunci
                     </label>
-                    <input
-                        id="cari"
-                        type="search"
-                        value={f.search}
-                        onChange={(e) => setF('search', e.target.value)}
-                        placeholder="Ketik nama panti, alamat, atau nomor SK..."
-                        className={inputClass}
-                    />
+                    <div className="relative">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Icon name="search" size={16} className="text-[#8a9182]" />
+                        </div>
+                        <input
+                            id="cari"
+                            type="search"
+                            value={f.search}
+                            onChange={(e) => setF('search', e.target.value)}
+                            placeholder="Cari nama panti, alamat, atau no SK..."
+                            className={`${inputClass} pl-10`}
+                        />
+                    </div>
                 </div>
                 <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#525a4a]" htmlFor="status">
+                    <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]" htmlFor="status">
                         Status Kelembagaan
                     </label>
                     <select id="status" value={f.status} onChange={(e) => setF('status', e.target.value)} className={inputClass}>
-                        <option value="">Semua Status Operasional</option>
+                        <option value="">Semua Status</option>
                         <option value="aktif">Aktif Beroperasi</option>
                         <option value="nonaktif">Nonaktif / Tutup</option>
                     </select>
                 </div>
                 {kelurahans.length > 1 && (
                     <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#525a4a]" htmlFor="kel">
-                            Wilayah Kelurahan / Desa
+                        <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]" htmlFor="kel">
+                            Wilayah Kelurahan
                         </label>
                         <select id="kel" value={f.kelurahan_id} onChange={(e) => setF('kelurahan_id', e.target.value)} className={inputClass}>
                             <option value="">Semua Wilayah</option>
@@ -121,114 +130,125 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                 )}
             </FilterBar>
 
-            <Card padded={false}>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr>
-                                <th className={thClass}>Nama Panti & Alamat</th>
-                                <th className={thClass}>Wilayah Kelurahan</th>
-                                <th className={thClass}>Anak Asuh</th>
-                                <th className={thClass}>Kelengkapan Data</th>
-                                <th className={thClass}>Status Validasi</th>
-                                <th className={thClass}>Aksi Kerja</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#edf0e5]">
-                            {pantis.data.length === 0 ? (
-                                <EmptyRow
-                                    colSpan={6}
-                                    onReset={() => {
-                                        setF('search', '');
-                                        setF('status', '');
-                                        setF('validasi', '');
-                                        setF('kelurahan_id', '');
-                                    }}
-                                >
-                                    Tidak ada data panti asuhan yang sesuai dengan filter pencarian.
-                                </EmptyRow>
-                            ) : (
-                                pantis.data.map((panti) => (
-                                    <tr key={panti.id} className="hover:bg-[#fbfcf9] transition">
-                                        <td className={tdClass}>
-                                            <Link href={`/panti/${panti.id}`} className="font-extrabold text-base text-[#1b2e23] hover:text-[#203b2e] hover:underline">
-                                                {panti.nama}
-                                            </Link>
-                                            <p className="mt-1 max-w-sm text-xs font-medium text-[#6c7465] leading-relaxed">
-                                                {panti.alamat}
-                                            </p>
-                                        </td>
-                                        <td className={tdClass}>
-                                            {panti.kelurahan ? (
-                                                <div>
-                                                    <p className="font-bold text-[#1f2e24]">{panti.kelurahan.nama}</p>
-                                                    <p className="text-xs text-[#737b6c]">Kec. {panti.kelurahan.kecamatan}</p>
-                                                </div>
-                                            ) : (
-                                                <span className="inline-block rounded-md bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700">
-                                                    Belum Ditentukan
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className={tdClass}>
-                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e6d6] bg-white px-3 py-1 font-bold text-[#203b2e]">
-                                                <Icon name="users" size={15} />
-                                                <span>{panti.anaks_count} Anak</span>
-                                            </span>
-                                        </td>
-                                        <td className={tdClass}>
-                                            <ProgressBar value={panti.kelengkapan} />
-                                            {panti.kurang.length > 0 && (
-                                                <p className="mt-1.5 max-w-[220px] text-xs font-medium text-[#7a8172]">
-                                                    Kurang: <strong className="text-amber-800">{panti.kurang[0]}</strong>
-                                                    {panti.kurang.length > 1 && ` (+${panti.kurang.length - 1} lainnya)`}
-                                                </p>
-                                            )}
-                                        </td>
-                                        <td className={tdClass}>
-                                            <div className="flex flex-col items-start gap-1.5">
-                                                <StatusBadge value={panti.validation_status} />
-                                                {panti.status === 'nonaktif' && (
-                                                    <StatusBadge value="nonaktif" label="Lembaga Nonaktif" />
-                                                )}
-                                            </div>
-                                            {panti.validation_status === 'ditolak' && panti.catatan_validasi && (
-                                                <p className="mt-1.5 max-w-[220px] rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs font-semibold text-rose-800">
-                                                    Revisi: {panti.catatan_validasi}
-                                                </p>
-                                            )}
-                                        </td>
-                                        <td className={tdClass}>
-                                            <div className="flex flex-wrap gap-2">
-                                                <Link href={`/panti/${panti.id}`} className={actView}>
-                                                    <Icon name={panti.validation_status === 'diajukan' ? 'check' : 'building'} size={14} />
-                                                    {panti.validation_status === 'diajukan' ? 'Tinjau' : 'Buka'}
-                                                </Link>
-                                                {panti.can.update && (
-                                                    <Link href={`/panti/${panti.id}/edit`} className={actEdit}>
-                                                        Edit
-                                                    </Link>
-                                                )}
-                                                {panti.can.delete && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDelete(panti)}
-                                                        className={actDelete}
-                                                    >
-                                                        Hapus
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+            {/* Grid Cards Panti */}
+            {pantis.data.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#c4c8b9] bg-white py-16 px-4 text-center">
+                    <Icon name="inbox" size={48} className="text-[#e2e4d8] mb-4" />
+                    <p className="text-sm font-medium text-[#8a9182]">Tidak ada data panti asuhan yang sesuai dengan kriteria pencarian.</p>
+                    {hasActiveFilters && (
+                        <button 
+                            type="button" 
+                            onClick={() => { setF('search', ''); setF('status', ''); setF('validasi', ''); setF('kelurahan_id', ''); }}
+                            className="mt-3 text-sm font-bold text-[#b08935] hover:underline"
+                        >
+                            Reset Filter
+                        </button>
+                    )}
                 </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pantis.data.map((panti) => (
+                        <div key={panti.id} className="group flex flex-col overflow-hidden rounded-xl border border-[#e2e4d8] bg-white shadow-sm transition-all hover:shadow-md hover:border-[#c4c8b9]">
+                            {/* Card Header (Logo & Nama) */}
+                            <div className="flex items-start gap-4 border-b border-[#f7f8f3] p-5">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#e2e4d8] bg-[#f7f8f3]">
+                                    {panti.logo ? (
+                                        <img src={panti.logo} alt={`Logo ${panti.nama}`} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <Icon name="home" size={24} className="text-[#c4c8b9]" />
+                                    )}
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                    <Link href={`/panti/${panti.id}`} className="block truncate text-base font-extrabold text-[#172b25] transition-colors hover:text-[#b08935] hover:underline">
+                                        {panti.nama}
+                                    </Link>
+                                    <p className="mt-1 truncate text-xs font-medium text-[#8a9182]" title={panti.alamat}>
+                                        {panti.alamat}
+                                    </p>
+                                </div>
+                            </div>
 
-                <Pagination paginator={pantis} />
-            </Card>
+                            {/* Card Body (Detail & Kelengkapan) */}
+                            <div className="flex flex-1 flex-col gap-4 p-5">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        {panti.kelurahan ? (
+                                            <>
+                                                <p className="text-[13px] font-bold text-[#172b25]">{panti.kelurahan.nama}</p>
+                                                <p className="text-[11px] font-medium text-[#8a9182]">Kec. {panti.kelurahan.kecamatan}</p>
+                                            </>
+                                        ) : (
+                                            <span className="inline-block rounded-md bg-[#fff4f2] px-2 py-1 text-xs font-bold text-[#d25241] border border-[#f9dbd6]">
+                                                Belum Ditentukan
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e2e4d8] bg-[#f7f8f3] px-3 py-1.5 text-xs font-bold text-[#172b25]">
+                                        <Icon name="users" size={14} className="text-[#8a9182]" />
+                                        <span>{panti.anaks_count} Anak</span>
+                                    </span>
+                                </div>
+
+                                <div className="mt-auto">
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        <StatusBadge value={panti.validation_status} />
+                                        {panti.status === 'nonaktif' && (
+                                            <StatusBadge value="nonaktif" label="Lembaga Nonaktif" />
+                                        )}
+                                    </div>
+                                    
+                                    <ProgressBar value={panti.kelengkapan} />
+                                    
+                                    {panti.kurang.length > 0 && (
+                                        <p className="mt-2 text-[11px] font-medium leading-tight text-[#8a9182]">
+                                            Kurang: <strong className="text-[#b08935]">{panti.kurang[0]}</strong>
+                                            {panti.kurang.length > 1 && ` (+${panti.kurang.length - 1} lainnya)`}
+                                        </p>
+                                    )}
+
+                                    {panti.validation_status === 'ditolak' && panti.catatan_validasi && (
+                                        <div className="mt-3 rounded-lg border border-[#f9dbd6] bg-[#fff4f2] p-2.5">
+                                            <p className="text-[11px] font-bold text-[#d25241] leading-tight">
+                                                Revisi: <span className="font-medium text-[#c04637]">{panti.catatan_validasi}</span>
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Card Footer (Aksi) */}
+                            <div className="flex items-center justify-end gap-2 border-t border-[#f7f8f3] bg-[#fcfdfa] px-5 py-3">
+                                <Link href={`/panti/${panti.id}`} className={actView}>
+                                    <Icon name={panti.validation_status === 'diajukan' ? 'check' : 'folder-open'} size={15} />
+                                    <span className="ml-1 text-xs font-bold">{panti.validation_status === 'diajukan' ? 'Tinjau' : 'Buka'}</span>
+                                </Link>
+                                {panti.can.update && (
+                                    <Link href={`/panti/${panti.id}/edit`} className={actEdit} title="Edit Data">
+                                        <Icon name="pencil" size={15} />
+                                    </Link>
+                                )}
+                                {panti.can.delete && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDelete(panti)}
+                                        className={actDelete}
+                                        title="Hapus Data"
+                                    >
+                                        <Icon name="trash" size={15} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {pantis.data.length > 0 && (
+                <div className="mt-6">
+                    <Pagination paginator={pantis} />
+                </div>
+            )}
 
             {/* Modal Konfirmasi Hapus Panti */}
             <ConfirmModal
@@ -238,7 +258,7 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                 title="Hapus Data Panti Asuhan?"
                 message={
                     deleteModal.panti
-                        ? `Apakah Anda yakin ingin menghapus data panti "${deleteModal.panti.nama}"? Seluruh data anak asuh, dokumen legalitas, dan kepengurusan di dalamnya akan dihapus.`
+                        ? `Apakah Anda yakin ingin menghapus data panti "${deleteModal.panti.nama}"? Seluruh data anak asuh, dokumen legalitas, dan kepengurusan di dalamnya akan ikut terhapus dan tidak dapat dikembalikan.`
                         : ''
                 }
             />
