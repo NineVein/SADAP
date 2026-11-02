@@ -1,0 +1,81 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@theme {
+    /* Typography */
+    --font-sans:
+        "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; /* Warna utama */
+    --color-brand-50: #eef4fb;
+    --color-brand-100: #d9e6f5;
+    --color-brand-200: #b7d0eb;
+    --color-brand-600: #24558a;
+    --color-brand-700: #17365d;
+    --color-brand-800: #102744;
+    --color-brand-900: #0b1c33; /* Warna aksen */
+    --color-accent-red: #b42332;
+    --color-accent-gold: #d6a84f; /* Latar dan teks */
+    --color-page: #f4f7fb;
+    --color-surface: #ffffff;
+    --color-ink: #172033;
+    --color-muted: #64748b;
+} /* Dasar dokumen */
+html {
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+body {
+    margin: 0;
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.6;
+} /* Hierarki tipografi */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-sans);
+    color: var(--color-brand-800);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.25;
+} /* Form */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+} /* Fokus keyboard */
+:focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 3px;
+} /* Seleksi teks */
+::selection {
+    background-color: var(--color-brand-700);
+    color: #ffffff;
+} /* Scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
