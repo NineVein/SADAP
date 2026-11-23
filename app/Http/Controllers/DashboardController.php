@@ -103,6 +103,13 @@ class DashboardController extends Controller
         }
 
         if ($user->isAdmin()) {
+            $tambah(
+                User::whereNotNull('terblokir_at')->count(),
+                'Akun terblokir menunggu dibuka',
+                'Pengguna salah password berkali-kali. Pastikan identitasnya, lalu buka blokir.',
+                '/users',
+                'rose'
+            );
             $tambah(Panti::whereNull('kelurahan_id')->count(), 'LKS belum punya wilayah', 'Tentukan kelurahan/desa agar bisa dikelola operator.', '/lks?tanpa_wilayah=1', 'rose');
         }
 

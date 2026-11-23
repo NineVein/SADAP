@@ -47,17 +47,10 @@ class User extends Authenticatable
         return $this->hasRole(Role::OPERATOR);
     }
 
-    /** True bila verifikasi dua langkah (OTP email) sudah diaktifkan dan dikonfirmasi. */
-    public function hasTwoFactor(): bool
+    /** Akun terblokir otomatis karena terlalu banyak salah password (admin tidak pernah). */
+    public function isBlocked(): bool
     {
-        return $this->two_factor_confirmed_at !== null;
-    }
-
-    /** Peran yang wajib memakai verifikasi dua langkah (diatur di config/diskat.php). */
-    public function mustUseTwoFactor(): bool
-    {
-        return (bool) config('diskat.two_factor.wajib')
-            && $this->hasRole(...(array) config('diskat.two_factor.peran', []));
+        return (bool) config('diskat.kunci_akun.aktif', true) && $this->terblokir_at !== null && ! $this->isAdmin();
     }
 
     protected function casts(): array
@@ -66,7 +59,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'two_factor_confirmed_at' => 'datetime',
+            'terblokir_at' => 'datetime',
+            'terakhir_gagal_at' => 'datetime',
         ];
     }
 }

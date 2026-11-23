@@ -20,7 +20,7 @@ class ProfileController extends Controller
     {
         $data = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', 'different:current_password', Password::min(8)->letters()->numbers()],
+            'password' => ['required', 'confirmed', 'different:current_password', $request->user()->isAdmin() ? Password::min(12)->letters()->mixedCase()->numbers() : Password::min(8)->letters()->numbers()],
         ], [
             'current_password.current_password' => 'Password saat ini tidak sesuai.',
             'password.different' => 'Password baru harus berbeda dari password saat ini.',

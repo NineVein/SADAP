@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Kelurahan;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\KunciAkunService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,8 @@ class UserController extends Controller
                 $query->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('email', 'like', $like));
             })
             ->when($roleId > 0, fn ($q) => $q->where('role_id', $roleId))
+            // Akun terblokir tampil paling atas agar admin langsung melihatnya.
+            ->orderByRaw('terblokir_at IS NULL')
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString()
@@ -39,7 +42,8 @@ class UserController extends Controller
                 'role' => $u->role?->only(['id', 'name', 'label']),
                 'kelurahan' => $u->kelurahan?->nama,
                 'is_self' => $u->id === auth()->id(),
-                'two_factor' => $u->hasTwoFactor(),
+                'terblokir' => $u->isBlocked(),
+                'login_gagal' => $u->login_gagal,
             ]);
 
         return Inertia::render('Users/Index', [
@@ -122,16 +126,24 @@ class UserController extends Controller
         return back()->with('success', $user->is_active ? 'Akun diaktifkan.' : 'Akun dinonaktifkan.');
     }
 
-    /** Untuk pengguna yang tidak bisa lagi membuka emailnya. Hanya admin. */
-    public function resetTwoFactor(Request $request, User $user): RedirectResponse
+    /** Membuka blokir akun yang terkunci karena salah password. Hanya admin (route role:admin). */
+    public function bukaBlokir(User $user, KunciAkunService $kunci): RedirectResponse
     {
-        $user->forceFill(['two_factor_confirmed_at' => null])->save();
-        app(\App\Services\TwoFactorService::class)->hapus($user, \App\Services\TwoFactorService::TUJUAN_LOGIN);
-        app(\App\Services\TwoFactorService::class)->hapus($user, \App\Services\TwoFactorService::TUJUAN_AKTIVASI);
+        $kunci->buka($user);
 
-        ActivityLog::record('user.2fa_direset', "Mereset verifikasi dua langkah akun {$user->email}", $user);
+        ActivityLog::record('user.dibuka_blokir', "Membuka blokir akun {$user->email}", $user);
 
-        return back()->with('success', 'Verifikasi dua langkah akun direset. Pengguna perlu mengaturnya kembali saat masuk.');
+        return back()->with('success', "Blokir akun {$user->name} dibuka. Pengguna bisa masuk kembali. Jika ia lupa password, buat password baru lewat Edit.");
+    }
+
+    /** Admin wajib memakai password lebih panjang karena akunnya tidak pernah diblokir. */
+    private function aturanPassword(Request $request): Password
+    {
+        $admin = Role::whereKey($request->input('role_id'))->value('name') === Role::ADMIN;
+
+        return $admin
+            ? Password::min(12)->letters()->mixedCase()->numbers()
+            : Password::min(8)->letters()->numbers();
     }
 
     private function rules(Request $request, ?User $user, bool $creating): array
@@ -146,7 +158,7 @@ class UserController extends Controller
             'password' => [
                 $creating ? 'required' : 'nullable',
                 'confirmed',
-                Password::min(8)->letters()->numbers(),
+                $this->aturanPassword($request),
             ],
             'is_active' => ['boolean'],
         ];

@@ -11,7 +11,6 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\PantiController;
 use App\Http\Controllers\PengurusController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValidasiController;
 use Illuminate\Support\Facades\Route;
@@ -19,24 +18,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:10,1');
-
-    // Tantangan kode OTP email (2FA) setelah password benar.
-    Route::get('/verifikasi-2fa', [TwoFactorController::class, 'challenge'])->name('2fa.challenge');
-    Route::post('/verifikasi-2fa', [TwoFactorController::class, 'verify'])->middleware('throttle:20,1')->name('2fa.verify');
-    Route::post('/verifikasi-2fa/kirim-ulang', [TwoFactorController::class, 'kirimUlang'])->middleware('throttle:10,1')->name('2fa.kirim-ulang');
-    Route::post('/verifikasi-2fa/batal', [TwoFactorController::class, 'batal'])->name('2fa.batal');
 });
 
-Route::middleware(['auth', 'active', 'twofactor'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
     Route::get('/', DashboardController::class)->name('dashboard');
-
-    // Keamanan akun: verifikasi dua langkah.
-    Route::get('/keamanan', [TwoFactorController::class, 'index'])->name('keamanan.index');
-    Route::post('/keamanan/aktifkan', [TwoFactorController::class, 'aktifkan'])->middleware('throttle:10,1')->name('keamanan.aktifkan');
-    Route::post('/keamanan/konfirmasi', [TwoFactorController::class, 'konfirmasi'])->name('keamanan.konfirmasi');
-    Route::delete('/keamanan', [TwoFactorController::class, 'nonaktifkan'])->name('keamanan.nonaktifkan');
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profil.password');
@@ -91,7 +78,7 @@ Route::middleware(['auth', 'active', 'twofactor'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
         Route::patch('/users/{user}/aktif', [UserController::class, 'toggle'])->name('users.toggle');
-        Route::post('/users/{user}/reset-2fa', [UserController::class, 'resetTwoFactor'])->name('users.reset-2fa');
+        Route::post('/users/{user}/buka-blokir', [UserController::class, 'bukaBlokir'])->name('users.buka-blokir');
 
         Route::resource('kelurahan', KelurahanController::class)->only(['index', 'store', 'update', 'destroy']);
 

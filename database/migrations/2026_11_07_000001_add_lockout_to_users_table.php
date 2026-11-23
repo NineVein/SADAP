@@ -9,17 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Ketiganya terenkripsi lewat cast di model User.
-            $table->text('two_factor_secret')->nullable();
-            $table->text('two_factor_recovery_codes')->nullable();
-            $table->timestamp('two_factor_confirmed_at')->nullable();
+            $table->unsignedSmallInteger('login_gagal')->default(0);
+            $table->timestamp('terakhir_gagal_at')->nullable();
+            $table->timestamp('terblokir_at')->nullable()->index();
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at']);
+            $table->dropIndex(['terblokir_at']);
+            $table->dropColumn(['login_gagal', 'terakhir_gagal_at', 'terblokir_at']);
         });
     }
 };

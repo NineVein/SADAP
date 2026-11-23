@@ -71,12 +71,8 @@ class CekProduksi extends Command
         $this->cek(config('logging.channels.'.config('logging.default').'.level', 'debug') !== 'debug' || config('app.env') !== 'production', 'LOG_LEVEL bukan debug', 'Gunakan LOG_LEVEL=warning agar log tidak memuat data pribadi.', 'peringatan');
         $this->cek(config('database.default') !== 'sqlite', 'Database produksi (bukan SQLite)', 'Gunakan MySQL/MariaDB atau PostgreSQL untuk banyak pengguna.', 'peringatan');
         $this->cek(config('cache.default') !== 'array', 'Cache bukan driver array', 'Pakai database, file, atau redis. Driver array hilang tiap permintaan dan merusak pembatas percobaan login.');
-        $this->cek((bool) config('diskat.two_factor.wajib'), 'Verifikasi dua langkah (2FA) diwajibkan', 'Set TWO_FACTOR_WAJIB=true di .env.');
-        $this->cek(
-            ! in_array(config('mail.default'), ['log', 'array'], true) && filled(config('mail.from.address')) && ! str_contains((string) config('mail.from.address'), 'example.com'),
-            'Email terkirim sungguhan (OTP 2FA lewat email)',
-            'MAIL_MAILER masih log/array atau MAIL_FROM_ADDRESS belum diisi. Tanpa email yang jalan, pengguna ber-2FA tidak bisa masuk. Isi MAIL_* di .env.'
-        );
+        $this->cek((bool) config('diskat.kunci_akun.aktif'), 'Blokir akun setelah salah password aktif', 'Set KUNCI_AKUN_AKTIF=true di .env.');
+        $this->cek(filled(config('diskat.kontak_admin.wa')) || filled(config('diskat.kontak_admin.telepon')), 'Kontak administrator terisi (tampil di halaman login)', 'Isi ADMIN_WA atau ADMIN_TELEPON di .env agar pengguna yang terblokir tahu harus menghubungi siapa.', 'peringatan');
     }
 
     private function akun(): void
@@ -97,12 +93,8 @@ class CekProduksi extends Command
             ->pluck('email');
         $this->cek($lemah->isEmpty(), 'Tidak ada akun ber-password bawaan', 'Ganti password: '.$lemah->take(5)->implode(', '));
 
-        $tanpa2fa = User::query()
-            ->where('is_active', true)
-            ->whereHas('role', fn ($q) => $q->whereIn('name', (array) config('diskat.two_factor.peran')))
-            ->whereNull('two_factor_confirmed_at')
-            ->count();
-        $this->cek($tanpa2fa === 0, 'Admin dan supervisor sudah aktif 2FA', "{$tanpa2fa} akun belum mengaktifkan 2FA (diminta saat login berikutnya).", 'peringatan');
+        $terblokir = User::whereNotNull('terblokir_at')->count();
+        $this->cek($terblokir === 0, 'Tidak ada akun menunggu dibuka blokirnya', "{$terblokir} akun terblokir. Buka lewat Pengaturan > Pengguna setelah memastikan identitasnya.", 'peringatan');
     }
 
     private function penyimpananDanBackup(): void

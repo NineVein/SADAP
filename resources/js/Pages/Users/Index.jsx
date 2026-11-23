@@ -6,7 +6,7 @@ import Icon from '../../Components/Icon';
 import useFilters from '../../Hooks/useFilters';
 import {
     Card, EmptyRow, FilterBar, PageHeader, Pagination, ConfirmModal,
-    actDelete, actEdit, btnPrimary, inputClass, tdClass, thClass,
+    actDelete, actEdit, actView, btnPrimary, inputClass, tdClass, thClass,
 } from '../../Components/ui';
 
 export default function Index({ users, filters, roles }) {
@@ -137,24 +137,29 @@ export default function Index({ users, filters, roles }) {
                                                 <Icon name={u.is_active ? 'check' : 'close'} size={12} />
                                                 <span>{u.is_active ? 'Aktif' : 'Dinonaktifkan'}</span>
                                             </span>
+                                            {u.terblokir && (
+                                                <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                                                    <Icon name="alert" size={12} />
+                                                    <span>Terblokir ({u.login_gagal}x salah)</span>
+                                                </p>
+                                            )}
                                         </td>
                                         <td className={tdClass}>
                                             <div className="flex gap-2">
                                                 <Link href={`/users/${u.id}/edit`} className={actEdit}>
                                                     Edit
                                                 </Link>
-                                                {u.two_factor && !u.is_self && (
+                                                {u.terblokir && (
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            if (window.confirm(`Reset verifikasi dua langkah untuk ${u.name}? Pengguna harus mengaturnya ulang.`)) {
-                                                                router.post(`/users/${u.id}/reset-2fa`, {}, { preserveScroll: true });
+                                                            if (window.confirm(`Buka blokir akun ${u.name}? Pastikan Anda sudah memastikan identitas pemiliknya.`)) {
+                                                                router.post(`/users/${u.id}/buka-blokir`, {}, { preserveScroll: true });
                                                             }
                                                         }}
-                                                        className={actView}
-                                                        title="Gunakan bila pengguna tidak bisa lagi membuka emailnya"
+                                                        className="inline-flex items-center rounded-md bg-[#203b2e] px-2.5 py-1.5 text-xs font-bold text-[#f7f2e5] transition hover:bg-[#2b4d3c]"
                                                     >
-                                                        Reset 2FA
+                                                        Buka Blokir
                                                     </button>
                                                 )}
                                                 {!u.is_self && (

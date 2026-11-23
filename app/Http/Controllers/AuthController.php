@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\User;
-use App\Services\TwoFactorService;
+use App\Services\KunciAkunService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,21 +13,27 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Throwable;
 
 class AuthController extends Controller
 {
     public function create(): Response
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', ['kontak' => config('diskat.kontak_admin')]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, KunciAkunService $kunci): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $user = User::where('email', Str::lower($credentials['email']))->first();
+
+        // Akun yang sudah diblokir ditolak walau password benar. Hanya admin yang bisa membukanya.
+        if ($user && $kunci->terblokir($user)) {
+            throw ValidationException::withMessages(['email' => $kunci->pesanBlokir()]);
+        }
 
         $key = Str::transliterate(Str::lower($credentials['email']).'|'.$request->ip());
 
@@ -41,10 +47,18 @@ class AuthController extends Controller
 
         // is_active ikut menjadi syarat login, jadi akun nonaktif tidak bisa masuk
         // dan pesannya sama dengan password salah (tidak membocorkan status akun).
-        $syarat = [...$credentials, 'is_active' => true];
+        $attempt = Auth::attempt(
+            [...$credentials, 'is_active' => true],
+            $request->boolean('remember')
+        );
 
-        if (! Auth::validate($syarat)) {
+        if (! $attempt) {
             RateLimiter::hit($key, 60);
+
+            // Hitung kegagalan untuk akun yang ada. Akun admin hanya dicatat, tidak pernah diblokir.
+            if ($user && $user->is_active && $kunci->catatGagal($user)) {
+                throw ValidationException::withMessages(['email' => $kunci->pesanBlokir()]);
+            }
 
             throw ValidationException::withMessages([
                 'email' => 'Email atau password salah, atau akun tidak aktif.',
@@ -52,33 +66,7 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($key);
-
-        /** @var User $user */
-        $user = Auth::getProvider()->retrieveByCredentials($syarat);
-
-        // Password benar tetapi akun memakai 2FA: belum masuk, kirim kode OTP ke email dulu.
-        if ($user->hasTwoFactor()) {
-            try {
-                app(TwoFactorService::class)->kirim($user, TwoFactorService::TUJUAN_LOGIN);
-            } catch (Throwable $e) {
-                report($e);
-
-                throw ValidationException::withMessages([
-                    'email' => 'Kode verifikasi tidak dapat dikirim ke email. Coba lagi atau hubungi administrator.',
-                ]);
-            }
-
-            $request->session()->regenerate();
-            $request->session()->put('login.2fa', [
-                'id' => $user->id,
-                'remember' => $request->boolean('remember'),
-                'ts' => now()->timestamp,
-            ]);
-
-            return redirect()->route('2fa.challenge');
-        }
-
-        Auth::login($user, $request->boolean('remember'));
+        $kunci->reset($request->user());
         $request->session()->regenerate();
 
         ActivityLog::record('auth.login', 'Berhasil masuk ke sistem');

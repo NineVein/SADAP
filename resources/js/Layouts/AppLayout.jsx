@@ -127,20 +127,13 @@ function SidebarContent({ user, badges, path, onNavigate }) {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-3.5 grid grid-cols-3 gap-2">
+                    <div className="mt-3.5 grid grid-cols-2 gap-2">
                         <Link
                             href="/profil"
                             onClick={onNavigate}
                             className="flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl border border-[#d6d9cb] bg-white py-1.5 text-xs font-bold text-[#2d3b31] hover:bg-[#f1f3e9] transition"
                         >
                             <Icon name="key" size={14} /> Password
-                        </Link>
-                        <Link
-                            href="/keamanan"
-                            onClick={onNavigate}
-                            className="flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl border border-[#d6d9cb] bg-white py-1.5 text-xs font-bold text-[#2d3b31] hover:bg-[#f1f3e9] transition"
-                        >
-                            <Icon name="shield" size={14} /> 2FA
                         </Link>
                         <button
                             type="button"

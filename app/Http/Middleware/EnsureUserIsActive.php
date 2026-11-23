@@ -17,13 +17,15 @@ class EnsureUserIsActive
     {
         $user = $request->user();
 
-        if ($user && ! $user->is_active) {
+        if ($user && ($user->isBlocked() || ! $user->is_active)) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             return redirect()->route('login')->withErrors([
-                'email' => 'Akun Anda tidak aktif. Hubungi administrator Dinas Sosial.',
+                'email' => $user->isBlocked()
+                    ? app(\App\Services\KunciAkunService::class)->pesanBlokir()
+                    : 'Akun Anda tidak aktif. Hubungi administrator Dinas Sosial.',
             ]);
         }
 

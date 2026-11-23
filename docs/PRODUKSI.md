@@ -51,14 +51,14 @@ Tambahkan satu baris di `crontab -e` (user web server):
 php artisan tinker
 >>> \App\Models\User::create(['name'=>'Administrator','email'=>'admin@GANTI.go.id','password'=>'GANTI_password_panjang','role_id'=>\App\Models\Role::where('name','admin')->value('id'),'is_active'=>true]);
 ```
-Jalankan `RoleSeeder` lebih dulu bila tabel `roles` masih kosong. Login pertama akan memaksa pengaturan 2FA (kode dikirim ke email admin, jadi pastikan `MAIL_*` sudah benar dan email admin bisa dibuka).
+Jalankan `RoleSeeder` lebih dulu bila tabel `roles` masih kosong. **Password admin minimal 12 karakter** (huruf besar, huruf kecil, angka) dan unik, karena akun admin tidak pernah diblokir.
 Buat akun supervisor dan operator lewat menu Pengaturan > Pengguna. Satu orang satu akun, jangan berbagi.
 
 ## 6. Periksa kesiapan
 ```bash
 php artisan sistem:cek-produksi
 ```
-Semua baris harus **OK** sebelum data nyata dimasukkan. Perintah ini memeriksa mode debug, HTTPS, cookie, 2FA, pengiriman email,
+Semua baris harus **OK** sebelum data nyata dimasukkan. Perintah ini memeriksa mode debug, HTTPS, cookie, blokir akun,
 akun demo, password bawaan, folder dokumen, dan umur backup terakhir. Jalankan lagi setiap setelah pembaruan.
 
 ## 7. Pemeliharaan rutin
@@ -71,9 +71,9 @@ akun demo, password bawaan, folder dokumen, dan umur backup terakhir. Jalankan l
 
 ## 8. Bila terjadi masalah
 - **Lupa password:** admin membuat password baru lewat Pengaturan > Pengguna > Edit.
-- **Kode OTP tidak masuk:** periksa folder spam, tunggu 60 detik lalu pilih Kirim ulang kode. Bila terus gagal, periksa `MAIL_*` dan `storage/logs`. Bila pengguna tidak bisa lagi membuka emailnya, admin memperbaiki email di Pengaturan > Pengguna lalu menekan **Reset 2FA**.
-- **Akun dicurigai diretas:** nonaktifkan akun, reset password dan 2FA, lalu periksa Log Aktivitas.
-- **APP_KEY:** menggantinya membuat data terenkripsi (sesi dan data terenkripsi lain) tidak terbaca. Jangan diganti kecuali terpaksa, dan simpan salinannya di pengelola sandi.
+- **Akun terblokir** (salah password 5 kali): pengguna menghubungi administrator (kantor, WhatsApp, atau telepon yang tampil di halaman login). Admin memastikan identitas penelepon, lalu menekan **Buka Blokir** di Pengaturan > Pengguna. Bila pengguna lupa password, buat password baru lewat **Edit**.
+- **Akun dicurigai diretas:** nonaktifkan akun, reset password, lalu periksa Log Aktivitas (cari aksi `auth.login_gagal` dan `auth.diblokir`).
+- **APP_KEY:** menggantinya membuat data terenkripsi (NIK klien, sesi) tidak terbaca. Jangan diganti kecuali terpaksa, dan simpan salinannya di pengelola sandi.
 - Catat setiap insiden: waktu, akun terkait, dan tindakan.
 
 ## 9. Aspek hukum dan tata kelola (bukan nasihat hukum)

@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/react';
 import Icon from '../../Components/Icon';
 import { btnPrimary, inputClass } from '../../Components/ui';
 
-export default function Login() {
+export default function Login({ kontak = {} }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -145,6 +145,32 @@ export default function Login() {
                             <Icon name="check" size={18} />
                             {processing ? 'Memverifikasi...' : 'Masuk Sekarang'}
                         </button>
+
+                        <div className="rounded-xl border border-[#e2e4d8] bg-[#f7f8f3] p-4 text-xs leading-5 !text-[#454f40]">
+                            <p className="font-bold !text-[#172b25]">Lupa password atau akun terblokir?</p>
+                            <p className="mt-1">
+                                Akun diblokir otomatis setelah beberapa kali salah memasukkan password. Hanya administrator yang dapat
+                                membukanya, hubungi:
+                            </p>
+                            <ul className="mt-2 space-y-0.5 font-semibold">
+                                {kontak.kantor && <li>Kantor: {kontak.kantor}</li>}
+                                {kontak.wa && (
+                                    <li>
+                                        WhatsApp:{' '}
+                                        <a
+                                            href={`https://wa.me/${String(kontak.wa).replace(/\D/g, '').replace(/^0/, '62')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="underline hover:!text-[#172b25]"
+                                        >
+                                            {kontak.wa}
+                                        </a>
+                                    </li>
+                                )}
+                                {kontak.telepon && <li>Telepon: {kontak.telepon}</li>}
+                                {kontak.jam && <li className="font-medium">{kontak.jam}</li>}
+                            </ul>
+                        </div>
                     </form>
                 </section>
             </main>

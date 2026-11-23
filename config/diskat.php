@@ -3,15 +3,30 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Verifikasi Dua Langkah (2FA)
+    | Blokir Akun
     |--------------------------------------------------------------------------
-    | wajib : bila true, peran di bawah dipaksa mengaktifkan 2FA sebelum bisa
-    |         memakai sistem. Atur lewat TWO_FACTOR_WAJIB di .env (aktifkan di produksi).
-    | peran : daftar peran yang diwajibkan. Peran lain boleh mengaktifkan sendiri.
+    | Akun (selain admin) diblokir setelah maks_gagal kali salah password berturut-turut.
+    | Hitungan kembali ke nol bila percobaan gagal terakhir sudah lebih dari reset_setelah_jam jam lalu.
+    | Hanya admin yang bisa membuka blokir. Akun admin tidak pernah diblokir.
     */
-    'two_factor' => [
-        'wajib' => (bool) env('TWO_FACTOR_WAJIB', false),
-        'peran' => ['admin', 'supervisor'],
+    'kunci_akun' => [
+        'aktif' => (bool) env('KUNCI_AKUN_AKTIF', true),
+        'maks_gagal' => (int) env('LOGIN_MAKS_GAGAL', 5),
+        'reset_setelah_jam' => 24,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kontak Administrator
+    |--------------------------------------------------------------------------
+    | Tampil di halaman login dan pada pesan akun terblokir, supaya pengguna tahu
+    | ke mana harus meminta bantuan. Isi lewat .env.
+    */
+    'kontak_admin' => [
+        'kantor' => env('ADMIN_KANTOR', 'Kantor Dinas Sosial Kabupaten Minahasa'),
+        'wa' => env('ADMIN_WA'),
+        'telepon' => env('ADMIN_TELEPON'),
+        'jam' => env('ADMIN_JAM_LAYANAN', 'Senin sampai Jumat, jam kerja'),
     ],
 
     /*

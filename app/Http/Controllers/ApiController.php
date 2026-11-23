@@ -31,7 +31,18 @@ class ApiController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $kunci = app(\App\Services\KunciAkunService::class);
+        $target = User::where('email', strtolower($cred['email']))->first();
+
+        if ($target && $kunci->terblokir($target)) {
+            return response()->json(['message' => $kunci->pesanBlokir()], 423);
+        }
+
         if (! Auth::attempt($cred)) {
+            if ($target && $target->is_active && $kunci->catatGagal($target)) {
+                return response()->json(['message' => $kunci->pesanBlokir()], 423);
+            }
+
             return response()->json([
                 'message' => 'Email atau password yang Anda masukkan salah.',
             ], 422);
@@ -39,52 +50,12 @@ class ApiController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
+        $kunci->reset($user);
 
         if (! $user->is_active) {
             Auth::logout();
             return response()->json([
                 'message' => 'Akun Anda dinonaktifkan oleh Administrator.',
-            ], 403);
-        }
-
-        // Login API tidak boleh menjadi jalan pintas dari verifikasi dua langkah.
-        if ($user->hasTwoFactor()) {
-            $service = app(\App\Services\TwoFactorService::class);
-            $kode = (string) $request->input('kode', '');
-
-            if ($kode === '') {
-                // Panggilan pertama: kirim OTP ke email, lalu minta klien mengulang dengan field "kode".
-                Auth::logout();
-
-                try {
-                    $service->kirim($user, \App\Services\TwoFactorService::TUJUAN_LOGIN);
-                } catch (\Throwable $e) {
-                    report($e);
-
-                    return response()->json(['message' => 'Kode verifikasi tidak dapat dikirim ke email. Hubungi administrator.'], 503);
-                }
-
-                return response()->json([
-                    'message' => 'Kode verifikasi dikirim ke email. Ulangi login dengan menyertakan field "kode".',
-                    'butuh_kode' => true,
-                ], 422);
-            }
-
-            $key = 'api-2fa:'.$user->id.'|'.$request->ip();
-            if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 5)
-                || ! $service->verifikasi($user, \App\Services\TwoFactorService::TUJUAN_LOGIN, $kode)) {
-                \Illuminate\Support\Facades\RateLimiter::hit($key, 60);
-                Auth::logout();
-
-                return response()->json(['message' => 'Kode salah atau sudah kedaluwarsa.'], 422);
-            }
-
-            \Illuminate\Support\Facades\RateLimiter::clear($key);
-        } elseif ($user->mustUseTwoFactor()) {
-            Auth::logout();
-
-            return response()->json([
-                'message' => 'Peran Anda wajib memakai verifikasi dua langkah. Aktifkan lewat aplikasi web terlebih dahulu.',
             ], 403);
         }
 
