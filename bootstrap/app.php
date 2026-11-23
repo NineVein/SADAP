@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -19,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
 
     ->withMiddleware(function (Middleware $middleware): void {
+        // Di belakang Nginx/Cloudflare/load balancer, isi TRUSTED_PROXIES di .env
+        // (alamat IP dipisah koma, atau * untuk semua) agar HTTPS dikenali dengan benar.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
             HandleInertiaRequests::class,
@@ -27,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role'   => EnsureUserHasRole::class,
             'active' => EnsureUserIsActive::class,
+            'twofactor' => EnsureTwoFactorEnabled::class,
         ]);
     })
 

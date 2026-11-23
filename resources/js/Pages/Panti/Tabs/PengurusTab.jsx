@@ -90,7 +90,7 @@ export default function PengurusTab({ panti, pengurus = [], can = {}, openKey, o
                             autoFocus
                         />
                     </Field>
-                    <Field label="Jabatan di Panti" required error={form.errors.jabatan} hint="Pilih dari daftar atau ketikkan jabatan baru">
+                    <Field label="Jabatan di LKS" required error={form.errors.jabatan} hint="Pilih dari daftar atau ketikkan jabatan baru">
                         <input
                             list="daftar-jabatan"
                             value={form.data.jabatan}
@@ -175,7 +175,7 @@ export default function PengurusTab({ panti, pengurus = [], can = {}, openKey, o
                 </thead>
                 <tbody className="divide-y divide-[#edf0e5]">
                     {pengurus.length === 0 ? (
-                        <EmptyRow colSpan={5}>Belum ada data pengurus yang dicatat untuk panti ini.</EmptyRow>
+                        <EmptyRow colSpan={5}>Belum ada data pengurus yang dicatat untuk LKS ini.</EmptyRow>
                     ) : (
                         pengurus.map((p) => {
                             const periodeText = p.periode_mulai

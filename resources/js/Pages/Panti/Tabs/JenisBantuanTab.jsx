@@ -53,7 +53,7 @@ export default function JenisBantuanTab({ panti, jenisBantuan = [], can = {} }) 
                 <div className="flex items-center gap-2">
                     <Icon name="check" size={16} className="text-[#203b2e]" />
                     <span>
-                        Centang jenis bantuan yang dibutuhkan oleh panti ini. Kolom kanan menunjukkan rekapitulasi bantuan yang telah diterima.
+                        Centang jenis bantuan yang dibutuhkan oleh LKS ini. Kolom kanan menunjukkan rekapitulasi bantuan yang telah diterima.
                     </span>
                 </div>
                 {totalNilaiDiterima > 0 && (
@@ -140,7 +140,7 @@ export default function JenisBantuanTab({ panti, jenisBantuan = [], can = {} }) 
             {can.manage && items.length > 0 && (
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#edf0e5] bg-[#fbfcf9] px-6 py-4">
                     <p className="text-xs font-medium text-[#6c7465]">
-                        <strong className="text-[#203b2e] font-bold">{totalDibutuhkan}</strong> dari total {items.length} jenis bantuan ditandai sebagai kebutuhan operasional panti ini.
+                        <strong className="text-[#203b2e] font-bold">{totalDibutuhkan}</strong> dari total {items.length} jenis bantuan ditandai sebagai kebutuhan operasional LKS ini.
                     </p>
                     <button
                         type="button"

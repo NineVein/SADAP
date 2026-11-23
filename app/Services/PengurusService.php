@@ -79,7 +79,7 @@ class PengurusService
 
         if ($bentrok) {
             throw ValidationException::withMessages([
-                'jabatan' => "Jabatan '{$jabatanInput}' berstatus aktif sudah terisi di panti ini. Silakan ubah status pengurus sebelumnya menjadi nonaktif terlebih dahulu.",
+                'jabatan' => "Jabatan '{$jabatanInput}' berstatus aktif sudah terisi di LKS ini. Silakan ubah status pengurus sebelumnya menjadi nonaktif terlebih dahulu.",
             ]);
         }
     }

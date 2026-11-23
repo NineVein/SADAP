@@ -3,6 +3,19 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Verifikasi Dua Langkah (2FA)
+    |--------------------------------------------------------------------------
+    | wajib : bila true, peran di bawah dipaksa mengaktifkan 2FA sebelum bisa
+    |         memakai sistem. Atur lewat TWO_FACTOR_WAJIB di .env (aktifkan di produksi).
+    | peran : daftar peran yang diwajibkan. Peran lain boleh mengaktifkan sendiri.
+    */
+    'two_factor' => [
+        'wajib' => (bool) env('TWO_FACTOR_WAJIB', false),
+        'peran' => ['admin', 'supervisor'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Konfigurasi Kepengurusan Panti
     |--------------------------------------------------------------------------
     */
@@ -23,6 +36,20 @@ return [
     ],
 
     'wajib_pengurus_aktif' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Batas Usia Klien per Kategori LKS
+    |--------------------------------------------------------------------------
+    | CONTOH awal. Sesuaikan dengan klasifikasi dan peraturan Dinas Sosial.
+    | anak_maks  : klien kategori Anak tidak boleh lebih tua dari ini (tahun).
+    | lansia_min : klien kategori Lanjut Usia minimal berusia ini (tahun).
+    | Kategori Disabilitas tidak dibatasi usia.
+    */
+    'usia' => [
+        'anak_maks' => 18,
+        'lansia_min' => 60,
+    ],
 
     /*
     |--------------------------------------------------------------------------

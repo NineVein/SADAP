@@ -1,6 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '../Layouts/AppLayout';
 import Icon from '../Components/Icon';
+import KategoriBadge from '../Components/KategoriBadge';
+import { KATEGORI_KLIEN } from '../Config/constants';
 import { Card, StatusBadge, formatDate } from '../Components/ui';
 
 function StatCard({ label, value, detail, icon, tone, href }) {
@@ -42,12 +44,12 @@ export default function Dashboard({ stats, tugas = [], pantiTerbaru = [] }) {
     const firstName = user.name.split(' ')[0];
 
     const cards = [
-        { label: 'Total Panti Asuhan', value: stats.total, detail: `${stats.aktif} aktif operasional, ${stats.nonaktif} nonaktif`, icon: 'building', tone: 'ink', href: '/panti' },
-        { label: 'Total Anak Asuh', value: stats.anak_aktif, detail: 'Anak asuh aktif terdaftar di panti', icon: 'users', tone: 'green', href: '/anak?status=aktif' },
-        { label: 'Panti Tervalidasi', value: stats.tervalidasi, detail: 'Lolos verifikasi kelayakan Dinas Sosial', icon: 'check', tone: 'green', href: '/panti?validasi=tervalidasi' },
+        { label: 'Total LKS', value: stats.total, detail: `${stats.aktif} aktif operasional, ${stats.nonaktif} nonaktif`, icon: 'building', tone: 'ink', href: '/lks' },
+        { label: 'Total Klien Aktif', value: stats.anak_aktif, detail: 'Anak, lanjut usia, dan disabilitas yang tinggal di LKS', icon: 'users', tone: 'green', href: '/klien?status=aktif' },
+        { label: 'LKS Tervalidasi', value: stats.tervalidasi, detail: 'Lolos verifikasi kelayakan Dinas Sosial', icon: 'check', tone: 'green', href: '/lks?validasi=tervalidasi' },
         isOperator
-            ? { label: 'Perlu Perbaikan', value: stats.ditolak, detail: 'Pengajuan yang perlu direvisi operator', icon: 'alert', tone: 'rose', href: '/panti?validasi=ditolak' }
-            : { label: 'Menunggu Validasi', value: stats.diajukan, detail: 'Pengajuan masuk yang perlu dinilai reviewer', icon: 'clock', tone: 'gold', href: '/panti?validasi=diajukan' },
+            ? { label: 'Perlu Perbaikan', value: stats.ditolak, detail: 'Pengajuan yang perlu direvisi operator', icon: 'alert', tone: 'rose', href: '/lks?validasi=ditolak' }
+            : { label: 'Menunggu Validasi', value: stats.diajukan, detail: 'Pengajuan masuk yang perlu dinilai reviewer', icon: 'clock', tone: 'gold', href: '/lks?validasi=diajukan' },
     ];
 
     return (
@@ -69,7 +71,7 @@ export default function Dashboard({ stats, tugas = [], pantiTerbaru = [] }) {
                             <p className="mt-3.5 text-sm sm:text-base text-[#d8dccf] max-w-xl leading-relaxed">
                                 {tugas.length > 0
                                     ? `Terdapat ${tugas.length} agenda tugas yang membutuhkan tindak lanjut Anda hari ini.`
-                                    : 'Seluruh data panti dan anak asuh telah lengkap dan tervalidasi dengan baik.'}
+                                    : 'Seluruh data LKS dan klien telah lengkap dan tervalidasi dengan baik.'}
                             </p>
                         </div>
 
@@ -91,6 +93,34 @@ export default function Dashboard({ stats, tugas = [], pantiTerbaru = [] }) {
                     ))}
                 </section>
 
+                {/* Rincian per kategori layanan: LKS dan klien aktif */}
+                <Card
+                    title="Rincian per Kategori Layanan"
+                    description="LKS dan klien aktif dipisah menurut kategori: Anak, Lanjut Usia, dan Disabilitas"
+                    padded={false}
+                >
+                    <div className="grid divide-y divide-[#e2e4d8] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                        {Object.keys(KATEGORI_KLIEN).map((k) => {
+                            const r = stats.per_kategori?.[k] ?? { lks: 0, klien: 0 };
+                            return (
+                                <div key={k} className="p-6">
+                                    <KategoriBadge value={k} />
+                                    <div className="mt-4 grid grid-cols-2 gap-4">
+                                        <Link href={`/lks?kategori=${k}`} className="group">
+                                            <p className="text-3xl font-black text-[#172b25] group-hover:text-[#b08935]">{r.lks}</p>
+                                            <p className="mt-0.5 text-xs font-semibold text-[#6c7465]">LKS</p>
+                                        </Link>
+                                        <Link href={`/klien?jenis=${k}&status=aktif`} className="group">
+                                            <p className="text-3xl font-black text-[#172b25] group-hover:text-[#b08935]">{r.klien}</p>
+                                            <p className="mt-0.5 text-xs font-semibold text-[#6c7465]">Klien aktif</p>
+                                        </Link>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Card>
+
                 {/* PUSAT TUGAS: Agenda Kerja yang Memerlukan Tindakan */}
                 <Card
                     title="Pusat Tugas & Tindak Lanjut"
@@ -104,7 +134,7 @@ export default function Dashboard({ stats, tugas = [], pantiTerbaru = [] }) {
                             </span>
                             <p className="mt-4 text-base font-bold text-[#172b25]">Tidak Ada Tugas yang Tertunda</p>
                             <p className="mt-1 text-xs sm:text-sm text-[#5a6253]">
-                                Seluruh berkas panti dan kelayakan anak binaan Anda dalam kondisi lengkap dan tervalidasi.
+                                Seluruh berkas LKS dan data klien Anda dalam kondisi lengkap dan tervalidasi.
                             </p>
                         </div>
                     ) : (
@@ -130,22 +160,22 @@ export default function Dashboard({ stats, tugas = [], pantiTerbaru = [] }) {
                     )}
                 </Card>
 
-                {/* Panti Asuhan Terbaru */}
+                {/* LKS Terbaru */}
                 <Card
-                    title="Panti Asuhan yang Terakhir Terdaftar"
-                    description="Data panti terbaru yang didaftarkan ke dalam sistem DISKATmsa"
+                    title="LKS yang Terakhir Terdaftar"
+                    description="Data LKS terbaru yang didaftarkan ke dalam sistem DISKATmsa"
                     padded={false}
                     actions={
-                        <Link href="/panti" className="text-xs font-bold text-[#203b2e] hover:text-[#d6b66d] transition-colors hover:underline">
-                            Lihat Semua Panti →
+                        <Link href="/lks" className="text-xs font-bold text-[#203b2e] hover:text-[#d6b66d] transition-colors hover:underline">
+                            Lihat Semua LKS →
                         </Link>
                     }
                 >
                     {pantiTerbaru.length === 0 ? (
                         <div className="px-6 py-12 text-center">
-                            <p className="text-sm text-[#5a6253]">Belum ada data panti yang terdaftar.</p>
-                            <Link href="/panti/create" className="mt-3.5 inline-flex items-center gap-2 rounded-xl bg-[#203b2e] px-4 py-2.5 text-xs font-bold text-[#fbf8f2] hover:bg-[#172b25] shadow-sm transition-colors">
-                                <Icon name="plus" size={15} /> Tambah Panti Baru
+                            <p className="text-sm text-[#5a6253]">Belum ada data LKS yang terdaftar.</p>
+                            <Link href="/lks/create" className="mt-3.5 inline-flex items-center gap-2 rounded-xl bg-[#203b2e] px-4 py-2.5 text-xs font-bold text-[#fbf8f2] hover:bg-[#172b25] shadow-sm transition-colors">
+                                <Icon name="plus" size={15} /> Tambah LKS Baru
                             </Link>
                         </div>
                     ) : (
@@ -153,12 +183,13 @@ export default function Dashboard({ stats, tugas = [], pantiTerbaru = [] }) {
                             {pantiTerbaru.map((panti) => (
                                 <li key={panti.id}>
                                     <Link
-                                        href={`/panti/${panti.id}`}
+                                        href={`/lks/${panti.id}`}
                                         className="flex flex-wrap items-center justify-between gap-4 px-6 py-4.5 transition hover:bg-[#f7f8f3]"
                                     >
                                         <div className="min-w-0 flex-1">
                                             <p className="text-base font-bold text-[#172b25]">{panti.nama}</p>
-                                            <p className="mt-0.5 break-words text-xs font-medium text-[#5a6253]">{panti.alamat}</p>
+                                            <div className="mt-1"><KategoriBadge value={panti.kategori_lks} prefix="LKS" /></div>
+                                            <p className="mt-1 break-words text-xs font-medium text-[#5a6253]">{panti.alamat}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <StatusBadge value={panti.validation_status} />

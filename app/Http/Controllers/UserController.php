@@ -39,6 +39,7 @@ class UserController extends Controller
                 'role' => $u->role?->only(['id', 'name', 'label']),
                 'kelurahan' => $u->kelurahan?->nama,
                 'is_self' => $u->id === auth()->id(),
+                'two_factor' => $u->hasTwoFactor(),
             ]);
 
         return Inertia::render('Users/Index', [
@@ -119,6 +120,18 @@ class UserController extends Controller
         );
 
         return back()->with('success', $user->is_active ? 'Akun diaktifkan.' : 'Akun dinonaktifkan.');
+    }
+
+    /** Untuk pengguna yang tidak bisa lagi membuka emailnya. Hanya admin. */
+    public function resetTwoFactor(Request $request, User $user): RedirectResponse
+    {
+        $user->forceFill(['two_factor_confirmed_at' => null])->save();
+        app(\App\Services\TwoFactorService::class)->hapus($user, \App\Services\TwoFactorService::TUJUAN_LOGIN);
+        app(\App\Services\TwoFactorService::class)->hapus($user, \App\Services\TwoFactorService::TUJUAN_AKTIVASI);
+
+        ActivityLog::record('user.2fa_direset', "Mereset verifikasi dua langkah akun {$user->email}", $user);
+
+        return back()->with('success', 'Verifikasi dua langkah akun direset. Pengguna perlu mengaturnya kembali saat masuk.');
     }
 
     private function rules(Request $request, ?User $user, bool $creating): array

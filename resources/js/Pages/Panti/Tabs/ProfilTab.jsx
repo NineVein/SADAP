@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import Icon from '../../../Components/Icon';
 import Badge from '../../../Components/Badge';
+import KategoriBadge from '../../../Components/KategoriBadge';
 import { actEdit, formatDateTime } from '../../../Components/ui';
 
 function DetailItem({ label, value, children }) {
@@ -27,14 +28,14 @@ export default function ProfilTab({ panti, can = {} }) {
             {/* Kartu Statistik Ringkas */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div className="flex flex-col justify-between rounded-2xl border border-[#e2e4d8] bg-white p-5 shadow-sm">
-                    <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Anak Binaan Aktif</p>
+                    <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Klien Terdaftar</p>
                     <div className="mt-3">
                         <p className="text-3xl font-black text-[#172b25]">{panti.anaks_count ?? 0}</p>
-                        <p className="mt-0.5 text-xs font-semibold text-[#8a9182]">Anak terdaftar</p>
+                        <p className="mt-0.5 text-xs font-semibold text-[#8a9182]">Klien (semua status)</p>
                     </div>
                 </div>
                 <div className="flex flex-col justify-between rounded-2xl border border-[#e2e4d8] bg-white p-5 shadow-sm">
-                    <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Pengurus Panti</p>
+                    <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Pengurus LKS</p>
                     <div className="mt-3">
                         <p className="text-3xl font-black text-[#172b25]">{panti.pengurus_count ?? 0}</p>
                         <p className="mt-0.5 text-xs font-semibold text-[#8a9182]">Orang pengurus</p>
@@ -60,11 +61,11 @@ export default function ProfilTab({ panti, can = {} }) {
             <div className="rounded-2xl border border-[#e2e4d8] bg-white p-6 shadow-sm">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e4d8] pb-4">
                     <div>
-                        <h3 className="text-lg font-extrabold text-[#172b25]">Informasi Umum Panti</h3>
+                        <h3 className="text-lg font-extrabold text-[#172b25]">Informasi Umum LKS</h3>
                         <p className="mt-0.5 text-sm text-[#5a6253]">Data identitas lembaga dan kontak operasional</p>
                     </div>
                     {can.update && (
-                        <Link href={`/panti/${panti.id}/edit`} className={actEdit}>
+                        <Link href={`/lks/${panti.id}/edit`} className={actEdit}>
                             <Icon name="pencil" size={16} />
                             <span>Ubah Data Profil</span>
                         </Link>
@@ -74,6 +75,12 @@ export default function ProfilTab({ panti, can = {} }) {
                 {/* Grid Rincian Data */}
                 <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <DetailItem label="Nama Resmi Lembaga" value={panti.nama} />
+
+                    <DetailItem label="Kategori Layanan">
+                        <div className="pt-0.5">
+                            <KategoriBadge value={panti.kategori_lks} prefix="LKS" />
+                        </div>
+                    </DetailItem>
                     
                     <DetailItem label="Wilayah Kelurahan / Kecamatan">
                         {kel ? (
@@ -94,7 +101,7 @@ export default function ProfilTab({ panti, can = {} }) {
 
                     <DetailItem label="Nomor Izin Operasional / SK" value={panti.no_sk || panti.nomor_izin} />
                     <DetailItem label="Tanggal Berdiri" value={panti.tanggal_berdiri} />
-                    <DetailItem label="Kapasitas Asuhan" value={panti.kapasitas ? `${panti.kapasitas} Orang` : null} />
+                    <DetailItem label="Kapasitas Layanan" value={panti.kapasitas ? `${panti.kapasitas} Klien` : null} />
                     
                     <DetailItem label="Pimpinan / Pengelola" value={panti.nama_pengelola} />
                     <DetailItem label="Nomor Telepon" value={panti.telepon} />

@@ -3,11 +3,12 @@ import AppLayout from '../../Layouts/AppLayout';
 import Icon from '../../Components/Icon';
 import { Card, Field, PageHeader, btnPrimary, btnSecondary, inputClass } from '../../Components/ui';
 
-export default function Form({ panti, kelurahans }) {
+export default function Form({ panti, kelurahans, options = {}, defaultKategori = 'anak', jumlahKlien = 0 }) {
     const isOperator = usePage().props.auth.user.role === 'operator';
     const editing = Boolean(panti);
 
     const { data, setData, post, put, processing, errors } = useForm({
+        kategori_lks: panti?.kategori_lks ?? defaultKategori ?? 'anak',
         nama: panti?.nama ?? '',
         alamat: panti?.alamat ?? '',
         kelurahan_id: panti?.kelurahan_id ?? (isOperator ? (kelurahans[0]?.id ?? '') : ''),
@@ -22,7 +23,7 @@ export default function Form({ panti, kelurahans }) {
 
     function submit(event) {
         event.preventDefault();
-        editing ? put(`/panti/${panti.id}`) : post('/panti');
+        editing ? put(`/lks/${panti.id}`) : post('/lks');
     }
 
     // Ekstraksi class tambahan untuk input agar selaras dengan tema (hijau zaitun/emas)
@@ -30,46 +31,84 @@ export default function Form({ panti, kelurahans }) {
 
     return (
         <AppLayout>
-            <Head title={editing ? `Edit ${panti.nama} - SADAP` : 'Tambah Panti Asuhan Baru - SADAP'} />
+            <Head title={editing ? `Edit ${panti.nama} - DISKATmsa` : 'Tambah LKS Baru - DISKATmsa'} />
 
             <PageHeader
-                title={editing ? `Edit Data: ${panti.nama}` : 'Tambah Lembaga Panti Asuhan Baru'}
+                title={editing ? `Edit Data: ${panti.nama}` : 'Tambah LKS Baru'}
                 description={
                     editing
-                        ? 'Perbarui informasi dasar identitas, kontak, dan kapasitas panti asuhan.'
-                        : 'Lengkapi profil awal panti asuhan. Data anak asuh, kepengurusan, dan dokumen legalitas dapat ditambahkan setelah panti tersimpan.'
+                        ? 'Perbarui informasi dasar identitas, kontak, dan kapasitas LKS.'
+                        : 'Pilih kategori layanan, lalu lengkapi profil awal LKS. Data klien, kepengurusan, dan dokumen legalitas ditambahkan setelah LKS tersimpan.'
                 }
                 breadcrumbs={[
-                    { label: 'Panti Asuhan', href: '/panti' },
-                    { label: editing ? 'Edit Data Panti' : 'Pendaftaran Panti Baru' },
+                    { label: 'LKS', href: '/lks' },
+                    { label: editing ? 'Edit Data LKS' : 'Pendaftaran LKS Baru' },
                 ]}
             />
 
             <form onSubmit={submit} className="max-w-4xl space-y-8 pb-10">
                 <Card
+                    title={<span className="text-[#172b25] font-extrabold text-lg">Kategori Layanan LKS</span>}
+                    description={<span className="text-[#5a6253]">Satu LKS melayani satu kategori klien. Kategori menentukan data klien yang dicatat.</span>}
+                    className="border-[#e2e4d8] shadow-sm rounded-2xl"
+                >
+                    <div role="radiogroup" aria-label="Kategori LKS" className="grid gap-3 pt-2 sm:grid-cols-3">
+                        {Object.entries(options.kategori ?? { anak: 'Anak', lanjut_usia: 'Lanjut Usia', disabilitas: 'Disabilitas' }).map(([value, label]) => {
+                            const active = data.kategori_lks === value;
+                            const locked = editing && jumlahKlien > 0 && !active;
+                            return (
+                                <label
+                                    key={value}
+                                    className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition ${
+                                        active ? 'border-[#b08935] bg-[#fdf8ed]' : 'border-[#e2e4d8] bg-white hover:bg-[#f7f8f3]'
+                                    } ${locked ? 'cursor-not-allowed opacity-50' : ''}`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="kategori_lks"
+                                        value={value}
+                                        checked={active}
+                                        disabled={locked}
+                                        onChange={() => setData('kategori_lks', value)}
+                                        className="accent-[#203b2e]"
+                                    />
+                                    <span className="text-sm font-extrabold text-[#172b25]">LKS {label}</span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                    {editing && jumlahKlien > 0 && (
+                        <p className="mt-3 text-xs font-semibold text-[#8a6d1f]">
+                            Kategori terkunci karena LKS ini sudah memiliki {jumlahKlien} klien.
+                        </p>
+                    )}
+                    {errors.kategori_lks && <p className="mt-2 text-xs font-semibold text-rose-700">{errors.kategori_lks}</p>}
+                </Card>
+
+                <Card
                     title={<span className="text-[#172b25] font-extrabold text-lg">Profil Identitas Kelembagaan</span>}
-                    description={<span className="text-[#5a6253]">Informasi utama identitas panti asuhan yang terdaftar di Dinas Sosial</span>}
+                    description={<span className="text-[#5a6253]">Informasi utama identitas LKS yang terdaftar di Dinas Sosial</span>}
                     className="border-[#e2e4d8] shadow-sm rounded-2xl"
                 >
                     <div className="grid gap-6 sm:grid-cols-2 pt-2">
                         <Field
-                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Nama Panti Asuhan</span>}
+                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Nama LKS</span>}
                             required
                             error={errors.nama}
-                            hint="Contoh: Panti Asuhan Kasih Minahasa"
+                            hint="Contoh: LKS Kasih Minahasa"
                             className="sm:col-span-2"
                         >
                             <input
                                 value={data.nama}
                                 onChange={(e) => setData('nama', e.target.value)}
-                                placeholder="Ketik nama lengkap lembaga panti..."
+                                placeholder="Ketik nama lengkap lembaga..."
                                 className={customInputClass}
                                 autoFocus
                             />
                         </Field>
 
                         <Field
-                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Alamat Lengkap Panti</span>}
+                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Alamat Lengkap LKS</span>}
                             required
                             error={errors.alamat}
                             hint="Tuliskan nama jalan, nomor, RT/RW, dan patokan lokasi yang jelas"
@@ -106,10 +145,10 @@ export default function Form({ panti, kelurahans }) {
                         </Field>
 
                         <Field
-                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Status Operasional Panti</span>}
+                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Status Operasional LKS</span>}
                             required
                             error={errors.status}
-                            hint="Pilih 'Aktif' jika lembaga sedang aktif beroperasi membina anak"
+                            hint="Pilih 'Aktif' jika lembaga sedang aktif beroperasi melayani klien"
                         >
                             <select
                                 value={data.status}
@@ -135,9 +174,9 @@ export default function Form({ panti, kelurahans }) {
                         </Field>
 
                         <Field
-                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Kapasitas Daya Tampung</span>}
+                            label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Kapasitas Layanan</span>}
                             error={errors.kapasitas}
-                            hint="Maksimal anak asuh yang dapat ditampung di asrama"
+                            hint="Jumlah maksimal klien yang dapat dilayani di dalam LKS"
                         >
                             <div className="relative">
                                 <input
@@ -150,7 +189,7 @@ export default function Form({ panti, kelurahans }) {
                                     className={`${customInputClass} pr-14`}
                                 />
                                 <span className="absolute inset-y-0 right-4 flex items-center text-xs font-bold text-[#8a9182] pointer-events-none">
-                                    Anak
+                                    Klien
                                 </span>
                             </div>
                         </Field>
@@ -179,7 +218,7 @@ export default function Form({ panti, kelurahans }) {
                         <Field
                             label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Tanggal Berdiri Lembaga</span>}
                             error={errors.tanggal_berdiri}
-                            hint="Tanggal resmi berdirinya panti sesuai akta pendirian"
+                            hint="Tanggal resmi berdirinya LKS sesuai akta pendirian"
                         >
                             <input
                                 type="date"
@@ -205,7 +244,7 @@ export default function Form({ panti, kelurahans }) {
                         <Field
                             label={<span className="text-[11px] font-extrabold uppercase tracking-widest text-[#5a6253]">Alamat Surel (Email)</span>}
                             error={errors.email}
-                            hint="Email resmi lembaga panti asuhan"
+                            hint="Email resmi lembaga"
                         >
                             <input
                                 type="email"
@@ -226,10 +265,10 @@ export default function Form({ panti, kelurahans }) {
                         className={`${btnPrimary} min-w-[200px] py-3 rounded-xl bg-[#172b25] text-white hover:bg-[#203b2e] hover:shadow-md transition-all font-bold flex items-center justify-center gap-2`}
                     >
                         <Icon name={processing ? 'loader' : 'check'} size={18} className={processing ? 'animate-spin' : ''} />
-                        <span>{processing ? 'Menyimpan Data...' : editing ? 'Simpan Perubahan' : 'Daftarkan Panti Baru'}</span>
+                        <span>{processing ? 'Menyimpan Data...' : editing ? 'Simpan Perubahan' : 'Daftarkan LKS Baru'}</span>
                     </button>
                     <Link
-                        href={editing ? `/panti/${panti.id}` : '/panti'}
+                        href={editing ? `/lks/${panti.id}` : '/lks'}
                         className={`${btnSecondary} py-3 px-6 rounded-xl border border-[#e2e4d8] bg-white text-[#5a6253] font-bold hover:bg-[#f7f8f3] hover:text-[#172b25] transition-colors`}
                     >
                         Batal

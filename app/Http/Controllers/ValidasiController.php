@@ -8,7 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
-/** Aksi validasi kelayakan data panti. */
+/** Aksi validasi kelayakan data LKS. */
 class ValidasiController extends Controller
 {
     public function __construct(private ValidasiService $service) {}
@@ -19,7 +19,7 @@ class ValidasiController extends Controller
 
         $this->service->ajukan($panti);
 
-        return back()->with('success', 'Data panti berhasil diajukan untuk proses validasi kelayakan.');
+        return back()->with('success', 'Data LKS berhasil diajukan untuk proses validasi kelayakan.');
     }
 
     public function setujui(Request $request, Panti $panti): RedirectResponse

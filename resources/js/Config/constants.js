@@ -56,6 +56,13 @@ export const KATEGORI_DOK = [
 
 export const WAJIB = ['akta_pendirian', 'izin_operasional'];
 
+/** Kategori LKS dan klien: Anak, Lanjut Usia, Disabilitas. */
+export const KATEGORI_KLIEN = {
+    anak: 'Anak',
+    lanjut_usia: 'Lanjut Usia',
+    disabilitas: 'Disabilitas',
+};
+
 export const KATEGORI_ANAK = [
     'yatim',
     'piatu',
@@ -71,7 +78,7 @@ export const EKSTENSI = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
 
 export const TABS_PANTI = {
     profil: 'Profil',
-    anak: 'Anak Binaan',
+    anak: 'Klien',
     pengurus: 'Pengurus',
     dokumen: 'Dokumen Instansi',
     jenis: 'Jenis Bantuan',

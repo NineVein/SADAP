@@ -47,6 +47,47 @@ class ApiController extends Controller
             ], 403);
         }
 
+        // Login API tidak boleh menjadi jalan pintas dari verifikasi dua langkah.
+        if ($user->hasTwoFactor()) {
+            $service = app(\App\Services\TwoFactorService::class);
+            $kode = (string) $request->input('kode', '');
+
+            if ($kode === '') {
+                // Panggilan pertama: kirim OTP ke email, lalu minta klien mengulang dengan field "kode".
+                Auth::logout();
+
+                try {
+                    $service->kirim($user, \App\Services\TwoFactorService::TUJUAN_LOGIN);
+                } catch (\Throwable $e) {
+                    report($e);
+
+                    return response()->json(['message' => 'Kode verifikasi tidak dapat dikirim ke email. Hubungi administrator.'], 503);
+                }
+
+                return response()->json([
+                    'message' => 'Kode verifikasi dikirim ke email. Ulangi login dengan menyertakan field "kode".',
+                    'butuh_kode' => true,
+                ], 422);
+            }
+
+            $key = 'api-2fa:'.$user->id.'|'.$request->ip();
+            if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 5)
+                || ! $service->verifikasi($user, \App\Services\TwoFactorService::TUJUAN_LOGIN, $kode)) {
+                \Illuminate\Support\Facades\RateLimiter::hit($key, 60);
+                Auth::logout();
+
+                return response()->json(['message' => 'Kode salah atau sudah kedaluwarsa.'], 422);
+            }
+
+            \Illuminate\Support\Facades\RateLimiter::clear($key);
+        } elseif ($user->mustUseTwoFactor()) {
+            Auth::logout();
+
+            return response()->json([
+                'message' => 'Peran Anda wajib memakai verifikasi dua langkah. Aktifkan lewat aplikasi web terlebih dahulu.',
+            ], 403);
+        }
+
         $panti = null;
         if ($user->isOperator() && $user->kelurahan_id) {
             $panti = Panti::where('kelurahan_id', $user->kelurahan_id)->first();
@@ -125,6 +166,8 @@ class ApiController extends Controller
             'jenis_bantuan' => JenisBantuan::where('is_active', true)->get(['id', 'kode', 'nama', 'kategori']),
             'sumber_dana' => ['APBD', 'APBN', 'Kemensos', 'Donatur Swasta', 'CSR'],
             'kategori_anak' => array_keys(Anak::KATEGORI),
+            'kategori_lks' => array_keys(Panti::KATEGORI_LKS),
+            'kategori_klien' => array_keys(Anak::KATEGORI_KLIEN),
             'jabatan' => config('diskat.jabatan', ['Ketua', 'Sekretaris', 'Bendahara', 'Pengasuh', 'Anggota']),
         ]);
     }
@@ -268,6 +311,9 @@ class ApiController extends Controller
             'pendidikan' => ['nullable', 'string'],
         ]);
 
+        // Kategori klien selalu mengikuti kategori LKS tempat klien tinggal.
+        $data['kategori_klien'] = Panti::findOrFail($data['panti_id'])->kategori_lks;
+
         $anak = Anak::create([
             ...$data,
             'status' => 'aktif',
@@ -282,7 +328,7 @@ class ApiController extends Controller
     public function hapusAnak(Anak $anak): JsonResponse
     {
         $anak->delete();
-        return response()->json(['message' => 'Data anak berhasil dihapus.']);
+        return response()->json(['message' => 'Data klien berhasil dihapus.']);
     }
 
     /**

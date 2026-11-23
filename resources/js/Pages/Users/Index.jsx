@@ -143,6 +143,20 @@ export default function Index({ users, filters, roles }) {
                                                 <Link href={`/users/${u.id}/edit`} className={actEdit}>
                                                     Edit
                                                 </Link>
+                                                {u.two_factor && !u.is_self && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (window.confirm(`Reset verifikasi dua langkah untuk ${u.name}? Pengguna harus mengaturnya ulang.`)) {
+                                                                router.post(`/users/${u.id}/reset-2fa`, {}, { preserveScroll: true });
+                                                            }
+                                                        }}
+                                                        className={actView}
+                                                        title="Gunakan bila pengguna tidak bisa lagi membuka emailnya"
+                                                    >
+                                                        Reset 2FA
+                                                    </button>
+                                                )}
                                                 {!u.is_self && (
                                                     <button
                                                         type="button"

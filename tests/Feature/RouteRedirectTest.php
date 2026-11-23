@@ -28,10 +28,9 @@ class RouteRedirectTest extends TestCase
 
     public function test_legacy_routes_redirect_properly(): void
     {
-        $this->actingAs($this->admin)->get('/pengurus')->assertRedirect('/panti');
-        $this->actingAs($this->admin)->get('/dokumen')->assertRedirect('/panti');
+        $this->actingAs($this->admin)->get('/pengurus')->assertRedirect('/lks');
+        $this->actingAs($this->admin)->get('/dokumen')->assertRedirect('/lks');
         $this->actingAs($this->admin)->get('/validasi')->assertRedirect(route('panti.index', ['validasi' => 'diajukan']));
-        $this->actingAs($this->admin)->get('/desil')->assertRedirect(route('anak.index', ['desil' => 'belum']));
     }
 }
 

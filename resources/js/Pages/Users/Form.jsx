@@ -142,7 +142,7 @@ export default function Form({ user, roles, kelurahans, isSelf = false }) {
                                 label="Wilayah Kelurahan / Desa"
                                 required
                                 error={errors.kelurahan_id}
-                                hint="Operator hanya berwenang mengelola panti di wilayah ini"
+                                hint="Operator hanya berwenang mengelola LKS di wilayah ini"
                             >
                                 <select
                                     value={data.kelurahan_id}

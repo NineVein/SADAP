@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\User;
+use App\Services\TwoFactorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -38,12 +41,9 @@ class AuthController extends Controller
 
         // is_active ikut menjadi syarat login, jadi akun nonaktif tidak bisa masuk
         // dan pesannya sama dengan password salah (tidak membocorkan status akun).
-        $attempt = Auth::attempt(
-            [...$credentials, 'is_active' => true],
-            $request->boolean('remember')
-        );
+        $syarat = [...$credentials, 'is_active' => true];
 
-        if (! $attempt) {
+        if (! Auth::validate($syarat)) {
             RateLimiter::hit($key, 60);
 
             throw ValidationException::withMessages([
@@ -52,6 +52,33 @@ class AuthController extends Controller
         }
 
         RateLimiter::clear($key);
+
+        /** @var User $user */
+        $user = Auth::getProvider()->retrieveByCredentials($syarat);
+
+        // Password benar tetapi akun memakai 2FA: belum masuk, kirim kode OTP ke email dulu.
+        if ($user->hasTwoFactor()) {
+            try {
+                app(TwoFactorService::class)->kirim($user, TwoFactorService::TUJUAN_LOGIN);
+            } catch (Throwable $e) {
+                report($e);
+
+                throw ValidationException::withMessages([
+                    'email' => 'Kode verifikasi tidak dapat dikirim ke email. Coba lagi atau hubungi administrator.',
+                ]);
+            }
+
+            $request->session()->regenerate();
+            $request->session()->put('login.2fa', [
+                'id' => $user->id,
+                'remember' => $request->boolean('remember'),
+                'ts' => now()->timestamp,
+            ]);
+
+            return redirect()->route('2fa.challenge');
+        }
+
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
         ActivityLog::record('auth.login', 'Berhasil masuk ke sistem');

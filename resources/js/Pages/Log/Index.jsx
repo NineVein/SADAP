@@ -14,7 +14,7 @@ export default function Index({ logs, filters }) {
 
             <PageHeader
                 title="Log Jejak Audit & Aktivitas Sistem"
-                description="Rekam jejak setiap perubahan data panti, mutasi anak asuh, pengunggahan dokumen legalitas, dan aksi validasi petugas."
+                description="Rekam jejak setiap perubahan data LKS, mutasi klien, pengunggahan dokumen legalitas, dan aksi validasi petugas."
                 breadcrumbs={[
                     { label: 'Pengaturan Sistem', href: '/users' },
                     { label: 'Log Aktivitas' },

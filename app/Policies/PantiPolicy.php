@@ -54,17 +54,6 @@ class PantiPolicy
         return $this->update($user, $panti);
     }
 
-    /** Melaporkan desil anak: operator di wilayahnya, admin, dan supervisor. */
-    public function reportDesil(User $user, Panti $panti): bool
-    {
-        return $user->isAdmin() || $user->isSupervisor() || ($user->isOperator() && $this->view($user, $panti));
-    }
-
-    public function reviewDesil(User $user, Panti $panti): bool
-    {
-        return $user->isAdmin() || $user->isSupervisor();
-    }
-
     /** Menyetujui atau menolak pengajuan validasi. */
     public function review(User $user, Panti $panti): bool
     {

@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\Anak;
-use App\Models\DesilLaporan;
 use App\Models\Panti;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -43,10 +42,6 @@ class HandleInertiaRequests extends Middleware
                 'validasi' => $user->isOperator()
                     ? Panti::visibleTo($user)->where('validation_status', Panti::DITOLAK)->count()
                     : Panti::where('validation_status', Panti::DIAJUKAN)->count(),
-                // Operator: anak tanpa desil. Reviewer: laporan desil yang menunggu.
-                'desil' => $user->isOperator()
-                    ? Anak::visibleTo($user)->where('status', 'aktif')->whereNull('desil')->count()
-                    : DesilLaporan::where('status', DesilLaporan::MENUNGGU)->count(),
             ] : null,
 
             'flash' => [

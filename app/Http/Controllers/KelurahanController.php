@@ -55,7 +55,7 @@ class KelurahanController extends Controller
     public function destroy(Kelurahan $kelurahan): RedirectResponse
     {
         if ($kelurahan->pantis()->exists() || $kelurahan->users()->exists()) {
-            return back()->with('error', 'Wilayah masih dipakai panti atau akun operator, tidak bisa dihapus.');
+            return back()->with('error', 'Wilayah masih dipakai LKS atau akun operator, tidak bisa dihapus.');
         }
 
         $kelurahan->delete();

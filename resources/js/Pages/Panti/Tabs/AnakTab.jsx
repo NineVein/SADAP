@@ -1,55 +1,37 @@
-import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import Icon from '../../../Components/Icon';
 import Badge from '../../../Components/Badge';
-import DesilForm from '../../../Components/DesilForm';
 import {
-    EmptyRow, StatusBadge, actDelete, actEdit, actView,
+    EmptyRow, actDelete, actEdit,
     tdClass, thClass,
 } from '../../../Components/ui';
 
 /**
- * Tab Anak Asuh / Binaan panti.
+ * Tab Klien LKS (Anak, Lanjut Usia, atau Disabilitas sesuai kategori LKS).
  */
 export default function AnakTab({ panti, anaks = [], options = {}, can = {}, onRequestDelete }) {
-    const [desilTarget, setDesilTarget] = useState(null);
-
     return (
         <>
-            {desilTarget && (
-                <div className="px-6 pt-6">
-                    <DesilForm
-                        key={desilTarget.id}
-                        anak={desilTarget}
-                        pantiName={panti.nama}
-                        options={options}
-                        isReviewer={can.reviewDesil}
-                        onDone={() => setDesilTarget(null)}
-                    />
-                </div>
-            )}
             <table className="w-full text-sm">
                 <thead>
                     <tr>
                         <th className={thClass}>Nama Lengkap & NIK</th>
                         <th className={thClass}>Jenis Kelamin & Umur</th>
-                        <th className={thClass}>Kategori Asuhan</th>
-                        <th className={thClass}>Desil Kesejahteraan</th>
+                        <th className={thClass}>Latar Belakang & Kondisi</th>
                         <th className={thClass}>Status</th>
                         <th className={thClass}>Aksi Tindakan</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-[#edf0e5]">
                     {anaks.length === 0 ? (
-                        <EmptyRow colSpan={6}>Belum ada data anak asuh yang terdaftar di panti ini.</EmptyRow>
+                        <EmptyRow colSpan={5}>Belum ada klien yang terdaftar di LKS ini.</EmptyRow>
                     ) : (
                         anaks.map((a) => {
-                            const menunggu = a.laporan?.status === 'menunggu';
                             return (
                                 <tr key={a.id} className="hover:bg-[#fbfcf9] transition">
                                     <td className={tdClass}>
                                         <p className="font-bold text-[#1e2f24]">{a.nama}</p>
-                                        <p className="text-xs text-[#707869] mt-0.5">{a.nik ? `NIK: ${a.nik}` : 'Belum ada NIK'}</p>
+                                        <p className="text-xs text-[#707869] mt-0.5">{a.nik_tersamar ? `NIK: ${a.nik_tersamar}` : 'Belum ada NIK'}</p>
                                     </td>
                                     <td className={tdClass}>
                                         <span className="font-medium text-[#2d3a30]">
@@ -61,23 +43,14 @@ export default function AnakTab({ panti, anaks = [], options = {}, can = {}, onR
                                         <span className="inline-block rounded-lg bg-[#eff2e7] px-2.5 py-1 text-xs font-bold text-[#203b2e]">
                                             {options.kategori?.[a.kategori] ?? a.kategori}
                                         </span>
-                                    </td>
-                                    <td className={tdClass}>
-                                        {a.desil ? (
-                                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
-                                                Desil {a.desil}
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs font-semibold text-amber-700">Belum ada desil</span>
-                                        )}
-                                        {menunggu && (
-                                            <p className="mt-1">
-                                                <StatusBadge value="diajukan" label="Laporan Menunggu" />
+                                        {a.jenis_disabilitas && (
+                                            <p className="mt-1 text-xs font-semibold text-violet-800">
+                                                {options.jenisDisabilitas?.[a.jenis_disabilitas] ?? a.jenis_disabilitas}
                                             </p>
                                         )}
-                                        {a.laporan?.status === 'ditolak' && (
-                                            <p className="mt-1 text-xs font-semibold text-rose-700">
-                                                Ditolak: {a.laporan.catatan_review}
+                                        {a.tingkat_ketergantungan && (
+                                            <p className="mt-0.5 text-xs text-[#757e70]">
+                                                {options.tingkat?.[a.tingkat_ketergantungan] ?? a.tingkat_ketergantungan}
                                             </p>
                                         )}
                                     </td>
@@ -86,17 +59,8 @@ export default function AnakTab({ panti, anaks = [], options = {}, can = {}, onR
                                     </td>
                                     <td className={tdClass}>
                                         <div className="flex flex-wrap gap-2">
-                                            {can.desil && !menunggu && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDesilTarget(a)}
-                                                    className={actView}
-                                                >
-                                                    {a.desil ? 'Ubah Desil' : 'Laporkan Desil'}
-                                                </button>
-                                            )}
                                             {can.manage && (
-                                                <Link href={`/anak/${a.id}/edit?dari=panti`} className={actEdit}>
+                                                <Link href={`/klien/${a.id}/edit?dari=panti`} className={actEdit}>
                                                     Edit
                                                 </Link>
                                             )}

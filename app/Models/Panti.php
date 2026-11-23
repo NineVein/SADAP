@@ -20,12 +20,20 @@ class Panti extends Model
 
     public const VALIDASI = [self::DRAFT, self::DIAJUKAN, self::TERVALIDASI, self::DITOLAK];
 
+    /** Kategori LKS = kategori klien yang dilayani. Satu LKS melayani satu kategori. */
+    public const KATEGORI_LKS = [
+        'anak' => 'Anak',
+        'lanjut_usia' => 'Lanjut Usia',
+        'disabilitas' => 'Disabilitas',
+    ];
+
     /**
      * Kolom validasi (validation_status, validated_by, dst.) sengaja TIDAK
      * ada di sini agar tidak bisa diubah lewat form.
      */
     protected $fillable = [
         'nama',
+        'kategori_lks',
         'alamat',
         'kelurahan_id',
         'no_sk',
@@ -88,6 +96,13 @@ class Panti extends Model
         return $this->riwayatBantuan();
     }
 
+    public function scopeKategori(Builder $query, ?string $kategori): Builder
+    {
+        return array_key_exists((string) $kategori, self::KATEGORI_LKS)
+            ? $query->where('pantis.kategori_lks', $kategori)
+            : $query;
+    }
+
     /** Operator hanya boleh melihat panti di kelurahan/desanya sendiri. */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
@@ -108,14 +123,14 @@ class Panti extends Model
         $hasAkta = $dokumens->contains(fn ($d) => in_array($d->jenis, ['akta_pendirian', 'sk_pendirian', 'akta_notaris'], true) && ! $d->kadaluarsa);
 
         return [
-            ['key' => 'profil', 'label' => 'Nama dan alamat panti', 'done' => filled($this->nama) && filled($this->alamat)],
+            ['key' => 'profil', 'label' => 'Nama dan alamat LKS', 'done' => filled($this->nama) && filled($this->alamat)],
             ['key' => 'wilayah', 'label' => 'Kelurahan/desa ditentukan', 'done' => filled($this->kelurahan_id)],
             ['key' => 'no_sk', 'label' => 'Nomor SK pendirian', 'done' => filled($this->no_sk)],
             ['key' => 'tanggal_berdiri', 'label' => 'Tanggal berdiri', 'done' => filled($this->tanggal_berdiri)],
             ['key' => 'kontak', 'label' => 'Telepon atau email', 'done' => filled($this->telepon) || filled($this->email)],
             ['key' => 'pengelola', 'label' => 'Nama pengelola', 'done' => filled($this->nama_pengelola)],
             ['key' => 'pengurus', 'label' => 'Minimal 1 pengurus aktif', 'done' => $hasActivePengurus],
-            ['key' => 'anak', 'label' => 'Minimal 1 anak terdata', 'done' => $this->countOf('anaks') > 0],
+            ['key' => 'anak', 'label' => 'Minimal 1 klien terdata', 'done' => $this->countOf('anaks') > 0],
             ['key' => 'dokumen', 'label' => 'Dokumen instansi wajib aktif (Akta/SK & Izin Operasional)', 'done' => ($hasIzin && $hasAkta) || $this->countOf('dokumens') > 0],
             ['key' => 'jenis_bantuan', 'label' => 'Kebutuhan jenis bantuan terdata', 'done' => $this->countOf('jenisBantuan') > 0],
         ];

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Icon from '../../Components/Icon';
+import KategoriBadge from '../../Components/KategoriBadge';
+import KategoriTabs from '../../Components/KategoriTabs';
 import useFilters from '../../Hooks/useFilters';
 import {
     FilterBar, Pagination, PageHeader, ProgressBar, StatusBadge, ConfirmModal,
@@ -16,8 +18,8 @@ const TABS = [
     { key: 'tervalidasi', label: 'Tervalidasi Dinsos', count: 'tervalidasi' },
 ];
 
-export default function Index({ pantis, filters, kelurahans, counts, can }) {
-    const [f, setF] = useFilters('/panti', filters);
+export default function Index({ pantis, filters, kelurahans, counts, kategoriCounts = {}, can }) {
+    const [f, setF] = useFilters('/lks', filters);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, panti: null });
 
     function handleDelete(panti) {
@@ -26,27 +28,35 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
 
     function confirmDelete() {
         if (!deleteModal.panti) return;
-        router.delete(`/panti/${deleteModal.panti.id}`, {
+        router.delete(`/lks/${deleteModal.panti.id}`, {
             preserveScroll: true,
             onSuccess: () => setDeleteModal({ isOpen: false, panti: null }),
         });
     }
 
-    const hasActiveFilters = Boolean(f.search || f.status || f.kelurahan_id);
+    const hasActiveFilters = Boolean(f.search || f.status || f.kelurahan_id || f.kategori);
 
     return (
         <AppLayout>
-            <Head title="Daftar Panti Asuhan - SADAP" />
+            <Head title="Daftar LKS - DISKATmsa" />
 
             <PageHeader
-                title="Daftar Lembaga Panti Asuhan"
-                description="Pusat kerja administrasi: pilih panti untuk mengelola anak asuh, data kepengurusan, dokumen legalitas, dan status validasi bantuan."
+                title="Daftar Lembaga Kesejahteraan Sosial (LKS)"
+                description="Pusat kerja administrasi: pilih LKS untuk mengelola klien, data kepengurusan, dokumen legalitas, dan status validasi bantuan. LKS dipisah menurut kategori layanan: Anak, Lanjut Usia, dan Disabilitas."
                 actions={can.create && (
-                    <Link href="/panti/create" className={btnPrimary}>
+                    <Link href={`/lks/create${f.kategori ? `?kategori=${f.kategori}` : ''}`} className={btnPrimary}>
                         <Icon name="plus" size={18} /> 
-                        <span>Tambah Panti Baru</span>
+                        <span>Tambah LKS Baru</span>
                     </Link>
                 )}
+            />
+
+            {/* Pemisah kategori LKS: Anak | Lanjut Usia | Disabilitas */}
+            <KategoriTabs
+                value={f.kategori}
+                onChange={(v) => setF('kategori', v)}
+                counts={kategoriCounts}
+                allLabel="Semua LKS"
             />
 
             {/* Tab Penyaringan Status Validasi */}
@@ -98,7 +108,7 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                             type="search"
                             value={f.search}
                             onChange={(e) => setF('search', e.target.value)}
-                            placeholder="Cari nama panti, alamat, atau no SK..."
+                            placeholder="Cari nama LKS, alamat, atau no SK..."
                             className={`${inputClass} pl-10`}
                         />
                     </div>
@@ -134,11 +144,11 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
             {pantis.data.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#c4c8b9] bg-white py-16 px-4 text-center">
                     <Icon name="inbox" size={48} className="text-[#e2e4d8] mb-4" />
-                    <p className="text-sm font-medium text-[#8a9182]">Tidak ada data panti asuhan yang sesuai dengan kriteria pencarian.</p>
+                    <p className="text-sm font-medium text-[#8a9182]">Tidak ada data LKS yang sesuai dengan kriteria pencarian.</p>
                     {hasActiveFilters && (
                         <button 
                             type="button" 
-                            onClick={() => { setF('search', ''); setF('status', ''); setF('validasi', ''); setF('kelurahan_id', ''); }}
+                            onClick={() => { setF('search', ''); setF('status', ''); setF('validasi', ''); setF('kelurahan_id', ''); setF('kategori', ''); }}
                             className="mt-3 text-sm font-bold text-[#b08935] hover:underline"
                         >
                             Reset Filter
@@ -159,9 +169,12 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                                     )}
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <Link href={`/panti/${panti.id}`} className="block truncate text-base font-extrabold text-[#172b25] transition-colors hover:text-[#b08935] hover:underline">
+                                    <Link href={`/lks/${panti.id}`} className="block truncate text-base font-extrabold text-[#172b25] transition-colors hover:text-[#b08935] hover:underline">
                                         {panti.nama}
                                     </Link>
+                                    <div className="mt-1">
+                                        <KategoriBadge value={panti.kategori_lks} prefix="LKS" />
+                                    </div>
                                     <p className="mt-1 truncate text-xs font-medium text-[#8a9182]" title={panti.alamat}>
                                         {panti.alamat}
                                     </p>
@@ -185,7 +198,7 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                                     </div>
                                     <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e2e4d8] bg-[#f7f8f3] px-3 py-1.5 text-xs font-bold text-[#172b25]">
                                         <Icon name="users" size={14} className="text-[#8a9182]" />
-                                        <span>{panti.anaks_count} Anak</span>
+                                        <span>{panti.anaks_count} Klien</span>
                                     </span>
                                 </div>
 
@@ -218,12 +231,12 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
 
                             {/* Card Footer (Aksi) */}
                             <div className="flex items-center justify-end gap-2 border-t border-[#f7f8f3] bg-[#fcfdfa] px-5 py-3">
-                                <Link href={`/panti/${panti.id}`} className={actView}>
+                                <Link href={`/lks/${panti.id}`} className={actView}>
                                     <Icon name={panti.validation_status === 'diajukan' ? 'check' : 'folder-open'} size={15} />
                                     <span className="ml-1 text-xs font-bold">{panti.validation_status === 'diajukan' ? 'Tinjau' : 'Buka'}</span>
                                 </Link>
                                 {panti.can.update && (
-                                    <Link href={`/panti/${panti.id}/edit`} className={actEdit} title="Edit Data">
+                                    <Link href={`/lks/${panti.id}/edit`} className={actEdit} title="Edit Data">
                                         <Icon name="pencil" size={15} />
                                     </Link>
                                 )}
@@ -250,15 +263,15 @@ export default function Index({ pantis, filters, kelurahans, counts, can }) {
                 </div>
             )}
 
-            {/* Modal Konfirmasi Hapus Panti */}
+            {/* Modal Konfirmasi Hapus LKS */}
             <ConfirmModal
                 isOpen={deleteModal.isOpen}
                 onClose={() => setDeleteModal({ isOpen: false, panti: null })}
                 onConfirm={confirmDelete}
-                title="Hapus Data Panti Asuhan?"
+                title="Hapus Data LKS?"
                 message={
                     deleteModal.panti
-                        ? `Apakah Anda yakin ingin menghapus data panti "${deleteModal.panti.nama}"? Seluruh data anak asuh, dokumen legalitas, dan kepengurusan di dalamnya akan ikut terhapus dan tidak dapat dikembalikan.`
+                        ? `Apakah Anda yakin ingin menghapus data LKS "${deleteModal.panti.nama}"? Seluruh data klien, dokumen legalitas, dan kepengurusan di dalamnya akan ikut terhapus.`
                         : ''
                 }
             />

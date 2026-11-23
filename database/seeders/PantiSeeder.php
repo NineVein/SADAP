@@ -37,6 +37,27 @@ class PantiSeeder extends Seeder
                 'email' => null,
                 'status' => 'aktif',
             ],
+            // Contoh LKS kategori lain (data demo; ganti dengan data resmi lewat menu LKS).
+            [
+                'nama' => 'LKS Lanjut Usia Contoh',
+                'kategori_lks' => 'lanjut_usia',
+                'alamat' => 'Tondano, Sulawesi Utara',
+                'no_sk' => 'DUMMY-003',
+                'tanggal_berdiri' => '2015-03-20',
+                'telepon' => '081234567892',
+                'email' => 'lansia@example.com',
+                'status' => 'aktif',
+            ],
+            [
+                'nama' => 'LKS Disabilitas Contoh',
+                'kategori_lks' => 'disabilitas',
+                'alamat' => 'Tomohon, Sulawesi Utara',
+                'no_sk' => 'DUMMY-004',
+                'tanggal_berdiri' => '2017-09-05',
+                'telepon' => '081234567893',
+                'email' => 'disabilitas@example.com',
+                'status' => 'aktif',
+            ],
         ];
 
         foreach ($pantis as $panti) {

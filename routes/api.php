@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Route;
 | Endpoint RESTful yang kompatibel dengan dinas/ dan klien SPA/mobile.
 */
 
-Route::post('/login', [ApiController::class, 'login']);
+// Dibatasi 5 percobaan per menit per IP untuk mencegah tebak password.
+Route::post('/login', [ApiController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [ApiController::class, 'logout']);
 Route::get('/me', [ApiController::class, 'me']);
 Route::get('/referensi', [ApiController::class, 'referensi']);

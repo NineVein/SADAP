@@ -84,7 +84,7 @@ export default function Index({ kelurahans, filters }) {
 
             <PageHeader
                 title="Master Data Kelurahan & Desa"
-                description="Daftar wilayah administratif di Kabupaten Minahasa yang dipakai untuk memetakan panti dan membatasi akses operator."
+                description="Daftar wilayah administratif di Kabupaten Minahasa yang dipakai untuk memetakan LKS dan membatasi akses operator."
                 breadcrumbs={[
                     { label: 'Pengaturan Sistem', href: '/users' },
                     { label: 'Kelurahan & Desa' },
@@ -130,7 +130,7 @@ export default function Index({ kelurahans, filters }) {
                                 <th className={thClass}>Nama Wilayah</th>
                                 <th className={thClass}>Kecamatan</th>
                                 <th className={thClass}>Jenis</th>
-                                <th className={thClass}>Panti Terdaftar</th>
+                                <th className={thClass}>LKS Terdaftar</th>
                                 <th className={thClass}>Aksi Kerja</th>
                             </tr>
                         </thead>
@@ -169,7 +169,7 @@ export default function Index({ kelurahans, filters }) {
                                             <td className={tdClass}>
                                                 <span className="inline-flex items-center gap-1 rounded-lg border border-[#e2e6d6] bg-white px-2.5 py-1 text-xs font-bold text-[#203b2e]">
                                                     <Icon name="building" size={13} />
-                                                    <span>{k.pantis_count} Panti</span>
+                                                    <span>{k.pantis_count} LKS</span>
                                                 </span>
                                             </td>
                                             <td className={tdClass}>

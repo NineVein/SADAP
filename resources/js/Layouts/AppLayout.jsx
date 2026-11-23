@@ -10,15 +10,20 @@ function buildNavigation(role) {
             items: [{ label: 'Dashboard Utama', href: '/', icon: 'dashboard' }],
         },
         {
-            section: 'Pengelolaan Panti & Bantuan',
+            section: 'Pengelolaan LKS & Bantuan',
             items: [
-                // Panti = pusat kerja: anak, pengurus, dokumen, dan validasi dikerjakan dari sini.
-                { label: 'Panti Asuhan', href: '/panti', icon: 'building', badge: 'validasi' },
-                { label: 'Anak & Desil', href: '/anak', icon: 'users', badge: 'desil' },
+                // LKS = pusat kerja: klien, pengurus, dokumen, dan validasi dikerjakan dari sini.
+                { label: 'LKS', href: '/lks', icon: 'building', badge: 'validasi' },
+                { label: 'Klien', href: '/klien', icon: 'users' },
                 { label: 'Laporan & Statistik', href: '/laporan', icon: 'report' },
             ],
         },
     ];
+
+    // Impor data lama dari CSV: admin dan operator (operator terbatas pada wilayahnya).
+    if (role === 'admin' || role === 'operator') {
+        groups[1].items.push({ label: 'Impor Data', href: '/impor', icon: 'upload' });
+    }
 
     if (role === 'admin') {
         groups.push({
@@ -62,7 +67,7 @@ function SidebarContent({ user, badges, path, onNavigate }) {
                         <p className="text-[20px] font-black tracking-[-0.04em] text-[#1e2f25]">
                             DISKAT<span className="text-[#b49550]">msa</span>
                         </p>
-                        <p className="text-xs font-semibold text-[#666c5e]">Sistem Panti · Dinsos</p>
+                        <p className="text-xs font-semibold text-[#666c5e]">Sistem LKS · Dinsos</p>
                     </div>
                 </Link>
             </div>
@@ -122,13 +127,20 @@ function SidebarContent({ user, badges, path, onNavigate }) {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-3.5 grid grid-cols-2 gap-2">
+                    <div className="mt-3.5 grid grid-cols-3 gap-2">
                         <Link
                             href="/profil"
                             onClick={onNavigate}
                             className="flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl border border-[#d6d9cb] bg-white py-1.5 text-xs font-bold text-[#2d3b31] hover:bg-[#f1f3e9] transition"
                         >
                             <Icon name="key" size={14} /> Password
+                        </Link>
+                        <Link
+                            href="/keamanan"
+                            onClick={onNavigate}
+                            className="flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl border border-[#d6d9cb] bg-white py-1.5 text-xs font-bold text-[#2d3b31] hover:bg-[#f1f3e9] transition"
+                        >
+                            <Icon name="shield" size={14} /> 2FA
                         </Link>
                         <button
                             type="button"
@@ -190,7 +202,7 @@ export default function AppLayout({ children }) {
                     </button>
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-base font-extrabold text-[#1a2c20]">
-                            DISKATmsa · Sistem Administrasi dan Data Anak Panti
+                            DISKATmsa · Sistem Pendataan Lembaga Kesejahteraan Sosial (LKS)
                         </p>
                         <p className="truncate text-xs font-semibold text-[#666e5f]">Dinas Sosial Kabupaten Minahasa</p>
                     </div>
@@ -206,7 +218,7 @@ export default function AppLayout({ children }) {
                 <footer className="px-4 pb-8 sm:px-8 xl:px-10 print:hidden">
                     <div className="mx-auto max-w-[1400px] border-t border-[#e3e6d8] pt-5 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-[#7a8172]">
                         <p>© {new Date().getFullYear()} DISKATmsa · Dinas Sosial Kabupaten Minahasa. Hak Cipta Dilindungi.</p>
-                        <p>Sistem Terintegrasi Panti Asuhan & Penyaluran Bantuan Sosial</p>
+                        <p>Sistem Terintegrasi LKS Anak, Lanjut Usia & Disabilitas</p>
                     </div>
                 </footer>
             </div>

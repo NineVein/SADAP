@@ -18,7 +18,7 @@ class ValidasiService
         if (! $panti->isLengkap()) {
             $kurang = collect($panti->checklist())->where('done', false)->pluck('label')->implode(', ');
             throw ValidationException::withMessages([
-                'kelengkapan' => "Data panti belum lengkap ({$kurang}). Lengkapi seluruh poin sebelum mengajukan.",
+                'kelengkapan' => "Data LKS belum lengkap ({$kurang}). Lengkapi seluruh poin sebelum mengajukan.",
             ]);
         }
 
@@ -31,12 +31,12 @@ class ValidasiService
                 'validated_at' => null,
             ])->save();
 
-            ActivityLog::record('validasi.diajukan', "Mengajukan data panti {$panti->nama} untuk validasi kelayakan", $panti);
+            ActivityLog::record('validasi.diajukan', "Mengajukan data LKS {$panti->nama} untuk validasi kelayakan", $panti);
         });
     }
 
     /**
-     * Menyetujui validasi kelayakan data panti.
+     * Menyetujui validasi kelayakan data LKS.
      */
     public function setujui(Panti $panti, User $reviewer): void
     {
@@ -48,7 +48,7 @@ class ValidasiService
                 'validated_at' => now(),
             ])->save();
 
-            ActivityLog::record('validasi.disetujui', "Menyetujui validasi data panti {$panti->nama}", $panti);
+            ActivityLog::record('validasi.disetujui', "Menyetujui validasi data LKS {$panti->nama}", $panti);
         });
     }
 

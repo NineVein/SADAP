@@ -62,10 +62,10 @@ export default function AktivitasTab({ logs = [] }) {
             <div className="rounded-xl border border-[#eceee2] bg-[#fbfcf9] p-4 text-xs font-medium text-[#656d5e]">
                 <div className="flex items-center gap-2 font-bold text-[#203b2e] mb-1">
                     <Icon name="shield" size={15} />
-                    <span>Jejak Audit Perubahan Profil Panti</span>
+                    <span>Jejak Audit Perubahan Profil LKS</span>
                 </div>
                 <p>
-                    Menampilkan maksimal 50 perubahan terakhir pada profil, anak asuh, pengurus, dan dokumen panti ini
+                    Menampilkan maksimal 50 perubahan terakhir pada profil, klien, pengurus, dan dokumen LKS ini
                     sebagai pertanggungjawaban data kepada Dinas Sosial.
                 </p>
             </div>
@@ -73,7 +73,7 @@ export default function AktivitasTab({ logs = [] }) {
             <DataTable
                 rows={logs}
                 cols={cols}
-                emptyText="Belum ada riwayat aktivitas yang tercatat untuk panti ini."
+                emptyText="Belum ada riwayat aktivitas yang tercatat untuk LKS ini."
             />
         </div>
     );

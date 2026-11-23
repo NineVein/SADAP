@@ -31,9 +31,19 @@ class AnakRequest extends FormRequest
             'nik' => [
                 'nullable',
                 'digits:16',
-                Rule::unique('anaks', 'nik')
-                    ->whereNull('deleted_at')
-                    ->ignore($anak?->id),
+                function (string $attribute, mixed $value, \Closure $fail) use ($anak) {
+                    if (blank($value)) {
+                        return;
+                    }
+
+                    $ada = Anak::where('nik_hash', Anak::hashNik((string) $value))
+                        ->when($anak, fn ($q) => $q->whereKeyNot($anak->id))
+                        ->exists();
+
+                    if ($ada) {
+                        $fail('NIK ini sudah terdaftar di sistem.');
+                    }
+                },
             ],
             'nama' => ['required', 'string', 'max:255'],
             'jenis_kelamin' => ['required', Rule::in(['L', 'P'])],
@@ -52,7 +62,7 @@ class AnakRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'panti_id' => 'panti asuhan',
+            'panti_id' => 'LKS',
             'nik' => 'NIK',
             'nama' => 'nama lengkap anak',
             'jenis_kelamin' => 'jenis kelamin',
@@ -71,7 +81,7 @@ class AnakRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'panti_id.required' => 'Pilih panti asuhan tempat anak bernaung.',
+            'panti_id.required' => 'Pilih LKS tempat klien tinggal.',
             'nik.digits' => 'Nomor Induk Kependudukan (NIK) harus terdiri dari 16 digit angka.',
             'nik.unique' => 'NIK ini sudah terdaftar di sistem.',
             'nama.required' => 'Nama lengkap anak wajib diisi.',

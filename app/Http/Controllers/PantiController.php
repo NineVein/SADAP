@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Anak;
 use App\Models\JenisBantuan;
 use App\Models\Kelurahan;
 use App\Models\Panti;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,9 +31,11 @@ class PantiController extends Controller
         $status = $request->query('status');
         $validasi = $request->query('validasi');
         $kelurahanId = (int) $request->query('kelurahan_id');
+        $kategori = $request->query('kategori');
 
         $pantis = Panti::query()
             ->visibleTo($user)
+            ->kategori($kategori)
             ->with('kelurahan:id,nama,kecamatan')
             ->withCount(['anaks', 'pengurus', 'dokumens', 'jenisBantuan'])
             ->when($request->boolean('tanpa_wilayah'), fn ($q) => $q->whereNull('kelurahan_id'))
@@ -56,6 +60,7 @@ class PantiController extends Controller
             ->through(fn (Panti $panti) => [
                 'id' => $panti->id,
                 'nama' => $panti->nama,
+                'kategori_lks' => $panti->kategori_lks,
                 'alamat' => $panti->alamat,
                 'status' => $panti->status,
                 'validation_status' => $panti->validation_status,
@@ -77,18 +82,39 @@ class PantiController extends Controller
                 'status' => (string) $status,
                 'validasi' => (string) $validasi,
                 'kelurahan_id' => $kelurahanId ?: '',
+                'kategori' => array_key_exists((string) $kategori, Panti::KATEGORI_LKS) ? $kategori : '',
             ],
             'kelurahans' => $this->kelurahanOptions($request),
-            'counts' => $this->validasiCounts($request),
+            'counts' => $this->validasiCounts($request, $kategori),
+            'kategoriCounts' => $this->kategoriCounts($request),
+            'options' => ['kategori' => Panti::KATEGORI_LKS],
             'can' => ['create' => $user->can('create', Panti::class)],
         ]);
     }
 
-    /** Jumlah panti per status validasi, untuk tab di daftar panti. */
-    private function validasiCounts(Request $request): array
+    /** Jumlah LKS per kategori (Anak, Lanjut Usia, Disabilitas), untuk tab kategori. */
+    private function kategoriCounts(Request $request): array
     {
         $rows = Panti::query()
             ->visibleTo($request->user())
+            ->selectRaw('kategori_lks, count(*) as total')
+            ->groupBy('kategori_lks')
+            ->pluck('total', 'kategori_lks');
+
+        $hasil = ['semua' => (int) $rows->sum()];
+        foreach (array_keys(Panti::KATEGORI_LKS) as $k) {
+            $hasil[$k] = (int) ($rows[$k] ?? 0);
+        }
+
+        return $hasil;
+    }
+
+    /** Jumlah LKS per status validasi, untuk tab di daftar LKS. */
+    private function validasiCounts(Request $request, ?string $kategori = null): array
+    {
+        $rows = Panti::query()
+            ->visibleTo($request->user())
+            ->kategori($kategori)
             ->selectRaw('validation_status, count(*) as total')
             ->groupBy('validation_status')
             ->pluck('total', 'validation_status');
@@ -106,9 +132,14 @@ class PantiController extends Controller
     {
         Gate::authorize('create', Panti::class);
 
+        $kategori = $request->query('kategori');
+
         return Inertia::render('Panti/Form', [
             'panti' => null,
+            'defaultKategori' => array_key_exists((string) $kategori, Panti::KATEGORI_LKS) ? $kategori : 'anak',
             'kelurahans' => $this->kelurahanOptions($request),
+            'options' => ['kategori' => Panti::KATEGORI_LKS],
+            'jumlahKlien' => 0,
         ]);
     }
 
@@ -127,11 +158,11 @@ class PantiController extends Controller
         $panti->created_by = $user->id;
         $panti->save();
 
-        ActivityLog::record('panti.dibuat', "Menambahkan panti {$panti->nama}", $panti);
+        ActivityLog::record('panti.dibuat', "Menambahkan LKS {$panti->nama} (kategori {$panti->kategori_lks})", $panti);
 
         return redirect()
             ->route('panti.show', $panti)
-            ->with('success', 'Data panti berhasil ditambahkan. Lengkapi anak, pengurus, dokumen, dan kebutuhan jenis bantuan sebelum diajukan.');
+            ->with('success', 'Data LKS berhasil ditambahkan. Lengkapi klien, pengurus, dokumen, dan kebutuhan jenis bantuan sebelum diajukan.');
     }
 
     public function show(Request $request, Panti $panti): Response
@@ -218,9 +249,10 @@ class PantiController extends Controller
         return Inertia::render('Panti/Show', [
             'panti' => [
                 ...Arr::only($panti->attributesToArray(), [
-                    'id', 'nama', 'alamat', 'no_sk', 'tanggal_berdiri', 'telepon', 'email',
+                    'id', 'nama', 'kategori_lks', 'alamat', 'no_sk', 'tanggal_berdiri', 'telepon', 'email',
                     'nama_pengelola', 'kapasitas', 'status', 'validation_status',
                     'catatan_validasi', 'diajukan_at', 'validated_at', 'created_at',
+                    'anaks_count', 'pengurus_count', 'dokumens_count',
                 ]),
                 'kelurahan' => $panti->kelurahan,
                 'validator' => $panti->validator?->name,
@@ -229,10 +261,13 @@ class PantiController extends Controller
                 'jenis_bantuan_count' => $panti->jenis_bantuan_count ?? $dipilih->count(),
             ],
             'tab' => $tab,
-            'anaks' => $panti->anaks()->with('laporanTerakhir')->orderBy('nama')->limit(300)->get()
+            'anaks' => $panti->anaks()->orderBy('nama')->limit(300)->get()
                 ->map(fn ($a) => [
-                    ...$a->only(['id', 'nama', 'jenis_kelamin', 'umur', 'kategori', 'status', 'desil']),
-                    'laporan' => $a->laporanRingkas(),
+                    ...$a->only([
+                        'id', 'nama', 'jenis_kelamin', 'umur', 'kategori', 'kategori_klien',
+                        'jenis_disabilitas', 'tingkat_ketergantungan', 'status',
+                    ]),
+                    'nik_tersamar' => \App\Models\Anak::samarkanNik($a->nik),
                 ]),
             'pengurus' => $panti->pengurus()->orderBy('nama')
                 ->get(['id', 'panti_id', 'nama', 'jabatan', 'telepon', 'email', 'alamat', 'periode_mulai', 'periode_selesai', 'status']),
@@ -247,15 +282,15 @@ class PantiController extends Controller
             'activityLogs' => $activityLogs,
             'options' => [
                 'kategori' => \App\Models\Anak::KATEGORI,
+                'kategoriLks' => Panti::KATEGORI_LKS,
+                'jenisDisabilitas' => \App\Models\Anak::JENIS_DISABILITAS,
+                'tingkat' => \App\Models\Anak::TINGKAT_KETERGANTUNGAN,
                 'jenis' => \App\Models\Dokumen::JENIS,
-                'sumber' => \App\Models\DesilLaporan::SUMBER,
             ],
             'can' => [
                 'update' => $user->can('update', $panti),
                 'delete' => $user->can('delete', $panti),
                 'manage' => $user->can('manageData', $panti),
-                'desil' => $user->can('reportDesil', $panti),
-                'reviewDesil' => $user->can('reviewDesil', $panti),
                 'submit' => $user->can('submit', $panti),
                 'review' => $user->can('review', $panti),
             ],
@@ -294,10 +329,13 @@ class PantiController extends Controller
 
         return Inertia::render('Panti/Form', [
             'panti' => Arr::only($panti->attributesToArray(), [
-                'id', 'nama', 'alamat', 'kelurahan_id', 'no_sk', 'tanggal_berdiri',
+                'id', 'nama', 'kategori_lks', 'alamat', 'kelurahan_id', 'no_sk', 'tanggal_berdiri',
                 'telepon', 'email', 'nama_pengelola', 'kapasitas', 'status',
             ]),
+            'defaultKategori' => $panti->kategori_lks,
             'kelurahans' => $this->kelurahanOptions($request),
+            'options' => ['kategori' => Panti::KATEGORI_LKS],
+            'jumlahKlien' => $panti->anaks()->count(),
         ]);
     }
 
@@ -307,6 +345,13 @@ class PantiController extends Controller
 
         $data = $request->validate($this->rules($request, $panti));
 
+        // Kategori LKS terkunci selama masih ada klien, agar data klien tidak tercampur kategori.
+        if (isset($data['kategori_lks']) && $data['kategori_lks'] !== $panti->kategori_lks && $panti->anaks()->exists()) {
+            throw ValidationException::withMessages([
+                'kategori_lks' => 'Kategori LKS tidak dapat diubah karena sudah memiliki klien. Pindahkan atau hapus klien terlebih dahulu.',
+            ]);
+        }
+
         // Operator tidak boleh memindahkan panti ke wilayah lain.
         if ($request->user()->isOperator()) {
             unset($data['kelurahan_id']);
@@ -314,11 +359,11 @@ class PantiController extends Controller
 
         $panti->update($data);
 
-        ActivityLog::record('panti.diubah', "Memperbarui data panti {$panti->nama}", $panti);
+        ActivityLog::record('panti.diubah', "Memperbarui data LKS {$panti->nama}", $panti);
 
         return redirect()
             ->route('panti.show', $panti)
-            ->with('success', 'Data panti berhasil diperbarui.');
+            ->with('success', 'Data LKS berhasil diperbarui.');
     }
 
     public function destroy(Panti $panti): RedirectResponse
@@ -327,11 +372,11 @@ class PantiController extends Controller
 
         $panti->delete(); // soft delete: data masih bisa dipulihkan dari database
 
-        ActivityLog::record('panti.dihapus', "Menghapus panti {$panti->nama}", $panti);
+        ActivityLog::record('panti.dihapus', "Menghapus LKS {$panti->nama}", $panti);
 
         return redirect()
             ->route('panti.index')
-            ->with('success', 'Data panti berhasil dihapus.');
+            ->with('success', 'Data LKS berhasil dihapus.');
     }
 
     private function rules(Request $request, ?Panti $panti = null): array
@@ -347,6 +392,8 @@ class PantiController extends Controller
                     ->whereNull('deleted_at')
                     ->ignore($panti?->id),
             ],
+            // 'sometimes': bila tidak dikirim (mis. klien API lama) dipakai nilai bawaan/yang sudah ada.
+            'kategori_lks' => ['sometimes', 'required', Rule::in(array_keys(Panti::KATEGORI_LKS))],
             'alamat' => ['required', 'string', 'max:1000'],
             'kelurahan_id' => $user->isOperator() ? ['nullable'] : ['required', 'exists:kelurahans,id'],
             'no_sk' => ['nullable', 'string', 'max:255'],

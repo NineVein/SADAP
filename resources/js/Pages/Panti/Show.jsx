@@ -3,6 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import Icon from '../../Components/Icon';
 import Badge from '../../Components/Badge';
+import KategoriBadge from '../../Components/KategoriBadge';
 import {
     Card, PageHeader, StatusBadge, ConfirmModal,
     actView, btnDanger, btnPrimary, btnSecondary,
@@ -23,15 +24,18 @@ function ValidationPanel({ panti, can = {}, onGo, onConfirmAjukan }) {
     const [rejecting, setRejecting] = useState(false);
     const reject = useForm({ catatan: '' });
 
+    // Server mengirim persentase (angka); versi lama mengirim objek { lengkap }. Dukung keduanya.
+    const lengkap = typeof panti.kelengkapan === 'object' ? Boolean(panti.kelengkapan?.lengkap) : panti.kelengkapan >= 100;
+
     function submitReject(e) {
         e.preventDefault();
-        reject.post(`/panti/${panti.id}/tolak`, {
+        reject.post(`/lks/${panti.id}/tolak`, {
             preserveScroll: true,
             onSuccess: () => setRejecting(false),
         });
     }
 
-    const profil = can.update ? { label: 'Lengkapi Profil', href: `/panti/${panti.id}/edit` } : null;
+    const profil = can.update ? { label: 'Lengkapi Profil', href: `/lks/${panti.id}/edit` } : null;
     const aksi = {
         profil,
         wilayah: profil,
@@ -40,13 +44,13 @@ function ValidationPanel({ panti, can = {}, onGo, onConfirmAjukan }) {
         kontak: profil,
         pengelola: profil,
         pengurus: can.manage ? { label: 'Atur Pengurus', tab: 'pengurus' } : null,
-        anak: can.manage ? { label: 'Tambah Anak', href: `/anak/create?panti_id=${panti.id}&dari=panti` } : null,
+        anak: can.manage ? { label: 'Tambah Klien', href: `/klien/create?panti_id=${panti.id}&dari=panti` } : null,
         dokumen: can.manage ? { label: 'Unggah Berkas', tab: 'dokumen' } : null,
         jenis_bantuan: can.manage ? { label: 'Pilih Bantuan', tab: 'jenis' } : null,
     };
 
     return (
-        <Card title="Pemeriksaan & Validasi Kelayakan" description="Status legalitas dan kelayakan data untuk bantuan Dinas Sosial">
+        <Card title="Pemeriksaan & Validasi Kelayakan" description="Status legalitas dan kelengkapan data LKS untuk bantuan Dinas Sosial">
             <div className="flex flex-wrap items-center gap-2.5 mb-4">
                 <StatusBadge value={panti.validation_status} />
                 {panti.validation_status === 'diajukan' && (
@@ -114,13 +118,13 @@ function ValidationPanel({ panti, can = {}, onGo, onConfirmAjukan }) {
                         <button
                             type="button"
                             onClick={onConfirmAjukan}
-                            disabled={!panti.kelengkapan.lengkap}
+                            disabled={!lengkap}
                             className={`w-full ${btnPrimary}`}
                         >
                             <Icon name="check" size={16} />
                             <span>Ajukan ke Dinas Sosial</span>
                         </button>
-                        {!panti.kelengkapan.lengkap && (
+                        {!lengkap && (
                             <p className="mt-2 text-center text-xs text-amber-800">
                                 Lengkapi seluruh poin checklist di atas sebelum mengajukan validasi.
                             </p>
@@ -205,7 +209,7 @@ export default function Show({
 
     const tabs = [
         { key: 'profil', label: 'Profil', icon: 'building', count: null },
-        { key: 'anak', label: 'Anak Binaan', icon: 'users', count: anaks.length },
+        { key: 'anak', label: 'Klien', icon: 'users', count: anaks.length },
         { key: 'pengurus', label: 'Pengurus', icon: 'shield', count: pengurus.length },
         { key: 'dokumen', label: 'Dokumen Instansi', icon: 'file', count: dokumens.length },
         { key: 'jenis', label: 'Jenis Bantuan', icon: 'report', count: jenisBantuan.filter((j) => j.dibutuhkan).length },
@@ -220,8 +224,8 @@ export default function Show({
     function handleDeletePanti() {
         setConfirmModal({
             isOpen: true,
-            title: 'Hapus Data Panti Asuhan?',
-            message: `Apakah Anda yakin ingin menghapus data panti "${panti.nama}"? Seluruh data anak, pengurus, dan dokumen di dalamnya juga akan terhapus.`,
+            title: 'Hapus Data LKS?',
+            message: `Apakah Anda yakin ingin menghapus data LKS "${panti.nama}"? Seluruh data klien, pengurus, dan dokumen di dalamnya juga akan terhapus.`,
             danger: true,
             onConfirm: () => pantiService.hapus(panti.id),
         });
@@ -232,8 +236,8 @@ export default function Show({
         let url = '';
 
         if (type === 'anak') {
-            title = `Hapus data anak asuh "${nama}"?`;
-            url = `/anak/${id}`;
+            title = `Hapus data klien "${nama}"?`;
+            url = `/klien/${id}`;
         } else if (type === 'pengurus') {
             title = `Hapus data pengurus "${nama}"?`;
             url = `/pengurus/${id}`;
@@ -258,8 +262,8 @@ export default function Show({
     function handleConfirmAjukan() {
         setConfirmModal({
             isOpen: true,
-            title: 'Ajukan Validasi Data Panti?',
-            message: `Apakah Anda yakin data panti "${panti.nama}" sudah lengkap dan siap diverifikasi oleh petugas Dinas Sosial?`,
+            title: 'Ajukan Validasi Data LKS?',
+            message: `Apakah Anda yakin data LKS "${panti.nama}" sudah lengkap dan siap diverifikasi oleh petugas Dinas Sosial?`,
             danger: false,
             onConfirm: () => {
                 pantiService.ajukanValidasi(panti.id, {
@@ -271,7 +275,7 @@ export default function Show({
 
   return (
         <AppLayout>
-            <Head title={`${panti.nama} - SADAP`} />
+            <Head title={`${panti.nama} - DISKATmsa`} />
 
             <PageHeader
                 title={panti.nama}
@@ -281,28 +285,33 @@ export default function Show({
                         : 'Wilayah kelurahan/desa belum ditentukan'
                 }
                 breadcrumbs={[
-                    { label: 'Panti Asuhan', href: '/panti' },
+                    { label: 'LKS', href: '/lks' },
                     { label: panti.nama },
                 ]}
                 actions={
                     <>
-                        <Link href="/panti" className={btnSecondary}>
+                        <Link href="/lks" className={btnSecondary}>
                             <Icon name="arrow-left" size={16} /> Kembali ke Daftar
                         </Link>
                         {can.update && (
-                            <Link href={`/panti/${panti.id}/edit`} className={btnPrimary}>
-                                <Icon name="pencil" size={16} /> Edit Data Panti
+                            <Link href={`/lks/${panti.id}/edit`} className={btnPrimary}>
+                                <Icon name="pencil" size={16} /> Edit Data LKS
                             </Link>
                         )}
                         {can.delete && (
                             <button type="button" onClick={handleDeletePanti} className={btnDanger}>
-                                <Icon name="trash" size={16} /> Hapus Panti
+                                <Icon name="trash" size={16} /> Hapus LKS
                             </button>
                         )}
                     </>
                 }
             />
-            
+
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+                <KategoriBadge value={panti.kategori_lks} prefix="LKS" />
+                <span className="text-xs font-semibold text-[#6c7465]">Melayani klien kategori {panti.kategori_lks === 'lanjut_usia' ? 'lanjut usia' : panti.kategori_lks}</span>
+            </div>
+
             {/* ... (lanjutan kode grid items dan tabs di bawahnya tetap sama) ... */}
 
             <div className="grid items-start gap-7 xl:grid-cols-[1.55fr_1fr]">

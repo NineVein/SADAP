@@ -42,14 +42,14 @@ export default function Login() {
 
                     <div className="relative">
                         <span className="inline-block rounded-full bg-[#d6b66d]/20 border border-[#d6b66d]/40 px-3.5 py-1 text-xs font-bold !text-[#e8c983] mb-4">
-                            Sistem Administrasi Anak Panti
+                            Sistem Pendataan LKS
                         </span>
                         <h1 className="text-4xl font-extrabold leading-tight !text-[#fbf8f2]">
-                            Pengelolaan Data Panti Asuhan &<br />
-                            <span className="!text-[#e2c176]">Anak Binaan Sosial</span>
+                            Pengelolaan Data LKS &<br />
+                            <span className="!text-[#e2c176]">Klien Anak, Lanjut Usia & Disabilitas</span>
                         </h1>
                         <p className="mt-4 max-w-md text-sm leading-relaxed !text-[#fbf8f2]/90">
-                            Pencatatan akurat, verifikasi legalitas dokumen instansi, rekam desil kemiskinan, serta pemetaan kebutuhan jenis bantuan sosial panti asuhan di seluruh wilayah Kabupaten Minahasa.
+                            Pencatatan akurat, verifikasi legalitas dokumen instansi, serta pemetaan kebutuhan jenis bantuan sosial Lembaga Kesejahteraan Sosial (LKS) bagi anak, lanjut usia, dan penyandang disabilitas di seluruh wilayah Kabupaten Minahasa.
                         </p>
                     </div>
 
